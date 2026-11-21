@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+# pyrefly: ignore-all[missing-import]
 #!/usr/bin/env python3
 """ACE-Step Music Engine for claude-music skill.
 
@@ -84,7 +86,7 @@ def log(msg):
 def get_free_vram_mb():
     """Return free VRAM in MB, or -1 if not available."""
     try:
-        import torch
+        import torch  # type: ignore[missing-import]
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             free, total = torch.cuda.mem_get_info()
@@ -146,7 +148,7 @@ def load_config():
     if not config_path.exists():
         return {}
     try:
-        with open(config_path) as f:
+        with open(config_path, encoding="utf-8-sig") as f:
             cfg = json.load(f)
     except Exception as e:
         log(f"Warning: could not read config.json ({e}), using built-in defaults")
@@ -304,7 +306,7 @@ def initialize_acestep(args):
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
     os.environ["TORCHAUDIO_USE_BACKEND"] = "ffmpeg"
 
-    from acestep.handler import AceStepHandler
+    from acestep.handler import AceStepHandler  # type: ignore[missing-import]
     if getattr(args, "progress", False):
         emit_event("stage", stage="loading_model")
     log(f"Loading DiT model: {args.model}...")
@@ -338,13 +340,13 @@ def initialize_acestep(args):
         log(f"Loading LM: {args.lm_model}...")
         t1 = time.time()
         try:
-            from acestep.llm_inference import LLMHandler
+            from acestep.llm_inference import LLMHandler  # type: ignore[missing-import]
             llm_handler = LLMHandler()
 
             # Try vllm first, fall back to PyTorch native
             backend = "vllm"
             try:
-                import vllm  # noqa: F401
+                import vllm  # noqa: F401 # type: ignore[missing-import]
             except ImportError:
                 backend = "pt"
                 log("vllm not available, using PyTorch backend for LM")
@@ -396,7 +398,7 @@ def cmd_generate(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",
@@ -512,7 +514,7 @@ def cmd_cover(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",
@@ -615,7 +617,7 @@ def cmd_repaint(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",
@@ -721,7 +723,7 @@ def cmd_extract(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",
@@ -795,7 +797,7 @@ def cmd_lego(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",
@@ -867,7 +869,7 @@ def cmd_complete(args):
     if handler is None:
         error_json(status)
 
-    from acestep.inference import GenerationConfig, GenerationParams, generate_music
+    from acestep.inference import GenerationConfig, GenerationParams, generate_music  # type: ignore[missing-import]
 
     params = GenerationParams(
         caption=args.caption or "",

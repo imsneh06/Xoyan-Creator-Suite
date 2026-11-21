@@ -27,8 +27,8 @@ function Ask-User    { param($prompt) Write-Host "  $prompt " -NoNewline -Foregr
 
 Write-Host ""
 Write-Host "  ================================================================" -ForegroundColor White
-Write-Host "      claude-music - AI Music Production for Claude Code"          -ForegroundColor White
-Write-Host "      Powered by ACE-Step 1.5 (Windows installer)"                   -ForegroundColor White
+Write-Host "      Xoyan Studio — All-in-One Private AI Suite for Creators"     -ForegroundColor White
+Write-Host "      Zero Subscriptions · Zero Cloud Fees · 100% Local"           -ForegroundColor White
 Write-Host "  ================================================================" -ForegroundColor White
 Write-Host ""
 Write-Host "  This installer will set up everything you need."
@@ -135,7 +135,7 @@ if (-not (Test-Path $CONFIG)) {
 $cfgJson = Get-Content $CONFIG -Raw | ConvertFrom-Json
 $cfgJson.ace_step_dir    = $aceDir
 $cfgJson.checkpoint_dir  = (Join-Path $aceDir "checkpoints")
-$cfgJson | ConvertTo-Json -Depth 10 | Set-Content $CONFIG -Encoding utf8
+[System.IO.File]::WriteAllText($CONFIG, ($cfgJson | ConvertTo-Json -Depth 10), [System.Text.UTF8Encoding]::new($false))
 Write-Ok "config.json updated"
 
 # ----------------------------------------------------------------------
@@ -169,9 +169,30 @@ if ($hasTurbo) {
 }
 
 # ----------------------------------------------------------------------
-# 5. Symlinks (requires Developer Mode or Admin)
+# 5. Shorts Studio & Voiceover AI Dependencies
 # ----------------------------------------------------------------------
-Write-Step "5/6" "Creating skill symlinks..."
+Write-Step "5/7" "Shorts Studio & Voiceover AI dependencies..."
+$installShorts = Ask-User "Install Shorts & Voiceover AI dependencies (faster-whisper, edge-tts, opencv-python, yt-dlp)? [Y/n]"
+if ($installShorts -eq "" -or $installShorts -match '^[Yy]') {
+    Write-Host "  Installing dependencies..."
+    if (Test-Command uv) {
+        uv pip install faster-whisper edge-tts opencv-python yt-dlp
+    } else {
+        & $pyCmd -m pip install faster-whisper edge-tts opencv-python yt-dlp
+    }
+    if ($LASTEXITCODE -eq 0) {
+        Write-Ok "Shorts & Voiceover dependencies installed"
+    } else {
+        Write-Warn "Dependency installation had warnings. You can re-run manually: pip install faster-whisper edge-tts opencv-python yt-dlp"
+    }
+} else {
+    Write-Warn "Skipped. Shorts transcription and Voiceover AI require these packages to function."
+}
+
+# ----------------------------------------------------------------------
+# 6. Symlinks (requires Developer Mode or Admin)
+# ----------------------------------------------------------------------
+Write-Step "6/7" "Creating skill symlinks..."
 if (-not (Test-Path $TARGET_DIR)) { New-Item -ItemType Directory -Force -Path $TARGET_DIR | Out-Null }
 
 $skillDirs = Get-ChildItem -Path $SKILLS_DIR -Directory | Where-Object { $_.Name -like "claude-music*" }
@@ -186,14 +207,14 @@ foreach ($s in $skillDirs) {
     } catch {
         Write-Warn "Symlink failed for $($s.Name). Falling back to copy."
         Copy-Item -Path $s.FullName -Destination $link -Recurse -Force
-        Write-Ok "Copied $($s.Name) (note: edits won't auto-sync — re-run installer after changes)"
+        Write-Ok "Copied $($s.Name) (note: edits will not auto-sync - re-run installer after changes)"
     }
 }
 
 # ----------------------------------------------------------------------
-# 6. Done
+# 7. Done
 # ----------------------------------------------------------------------
-Write-Step "6/6" "All done!"
+Write-Step "7/7" "All done!"
 Write-Host ""
 Write-Host "  Next:"
 Write-Host "    1. Open Claude Code"

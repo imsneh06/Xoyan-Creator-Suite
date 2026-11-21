@@ -3,164 +3,922 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Claude Music</title>
+<title>Xoyan Studio — All-in-One Private AI Suite for Creators</title>
+<meta name="description" content="Xoyan Studio: The All-in-One Private AI Suite for Creators. No subscriptions, no cloud fees, no video watermarks. AI Music, Vertical Shorts &amp; Voiceover running 100% locally on your PC.">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
 <style>
-  :root {
-    --bg: #262624;
-    --card: #2B2A28;
-    --well: #232322;
-    --fg: #F5F4ED;
-    --brand: #D97757;
-    --brand-soft: rgba(217, 119, 87, 0.12);
-    --muted: #9C9A92;
-    --line: #3D3D3A;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.25);
+  /* =========================================================================
+     Xoyan Studio Design System Tokens & Theming Framework
+     Engineered for Enterprise Performance, Privacy & Precision
+     Xoyan Cyber Obsidian Palette · High Contrast · Zero Cloud Subscriptions
+     ========================================================================= */
+
+  :root, [data-theme="dark"] {
+    --color-mode: dark;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Xoyan Core Brand Identity */
+    --ember: #FF6A1A;
+    --ember-hover: #FF8533;
+    --ember-soft: rgba(255, 106, 26, 0.14);
+    --border-glow: rgba(255, 106, 26, 0.35);
+
+    /* Studio Mode Accents */
+    --brand-music: #1DB954;
+    --brand-music-hover: #1ED760;
+    --brand-music-soft: rgba(29, 185, 84, 0.14);
+    --brand-music-contrast: #000000;
+
+    --brand-shorts: #FF0000;
+    --brand-shorts-hover: #E60000;
+    --brand-shorts-soft: rgba(255, 0, 0, 0.14);
+    --brand-shorts-contrast: #FFFFFF;
+
+    --brand-voiceover: #4F46E5;
+    --brand-voiceover-hover: #6366F1;
+    --brand-voiceover-soft: rgba(79, 70, 229, 0.14);
+    --brand-voiceover-contrast: #FFFFFF;
+
+    /* Default Studio: Music */
+    --brand: var(--brand-music);
+    --brand-hover: var(--brand-music-hover);
+    --brand-soft: var(--brand-music-soft);
+    --brand-contrast: var(--brand-music-contrast);
+
+    /* Dark Mode Ramp (Obsidian Cyber from Xoyan.org) */
+    --bg: #0A0A0D;
+    --card: #121217;
+    --well: #181820;
+    --card-hover: #1C1C24;
+    --fg: #FFF5EC;
+    --fg-secondary: #D4D6DC;
+    --muted: #8E929B;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.16);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
+
+  /* --- Light Theme Ramp (Clean Slate / Paper from Xoyan.org) --- */
+  [data-theme="light"] {
+    --color-mode: light;
+    --ember: #E4560A;
+    --ember-hover: #FF6A1A;
+    --ember-soft: rgba(228, 86, 10, 0.12);
+    --border-glow: rgba(228, 86, 10, 0.25);
+    --bg: #EDEFF2;
+    --card: #FFFFFF;
+    --well: #F4F6F8;
+    --card-hover: #F8F9FA;
+    --fg: #171313;
+    --fg-secondary: #374151;
+    --muted: #6B7280;
+    --line: rgba(0, 0, 0, 0.08);
+    --line-strong: rgba(0, 0, 0, 0.16);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  /* --- Studio Specific Palettes --- */
+  /* 1. Music Studio */
+  [data-studio="music"] {
+    --brand: var(--brand-music);
+    --brand-hover: var(--brand-music-hover);
+    --brand-soft: var(--brand-music-soft);
+    --brand-contrast: var(--brand-music-contrast);
+  }
+  [data-studio="music"][data-theme="dark"] {
+    --bg: #121212;
+    --card: #181818;
+    --well: #202020;
+    --card-hover: #242424;
+    --line: rgba(255, 255, 255, 0.08);
+  }
+  [data-studio="music"][data-theme="light"] {
+    --bg: #F8FAF9;
+    --card: #FFFFFF;
+    --well: #F0F4F1;
+    --card-hover: #F6F9F7;
+    --line: #E1E6E2;
+  }
+
+  /* 2. Shorts Studio */
+  [data-studio="shorts"] {
+    --brand: var(--brand-shorts);
+    --brand-hover: var(--brand-shorts-hover);
+    --brand-soft: var(--brand-shorts-soft);
+    --brand-contrast: var(--brand-shorts-contrast);
+  }
+  [data-studio="shorts"][data-theme="dark"] {
+    --bg: #0F0F0F;
+    --card: #181818;
+    --well: #212121;
+    --card-hover: #282828;
+    --line: rgba(255, 255, 255, 0.09);
+  }
+  [data-studio="shorts"][data-theme="light"] {
+    --bg: #FAFAFA;
+    --card: #FFFFFF;
+    --well: #F2F2F2;
+    --card-hover: #F8F8F8;
+    --line: #E5E5E5;
+  }
+
+  /* 3. Voiceover AI Studio */
+  [data-studio="voiceover"] {
+    --brand: var(--brand-voiceover);
+    --brand-hover: var(--brand-voiceover-hover);
+    --brand-soft: var(--brand-voiceover-soft);
+    --brand-contrast: var(--brand-voiceover-contrast);
+  }
+  [data-studio="voiceover"][data-theme="dark"] {
+    --bg: #0B0F17;
+    --card: #111827;
+    --well: #1E293B;
+    --card-hover: #1F2937;
+    --line: rgba(255, 255, 255, 0.08);
+  }
+  [data-studio="voiceover"][data-theme="light"] {
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --well: #F1F5F9;
+    --card-hover: #F8FAFC;
+    --line: #E2E8F0;
+  }
+
+  /* --- Global Reset & Foundation --- */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--fg);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 15px;
+    font-family: var(--font-sans);
+    font-size: 14.5px;
     line-height: 1.5;
-    padding: 40px 20px 80px;
+    padding: 24px 20px 80px;
+    transition: background 0.2s ease, color 0.2s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  .mono { font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; }
-  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-  .eyebrow {
-    font-weight: 700; font-size: 11px; letter-spacing: 1.8px;
-    text-transform: uppercase; color: var(--muted);
+
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
   }
-  header { display: flex; align-items: center; justify-content: space-between; }
-  .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--muted); display: inline-block;
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
-  .status-dot.busy { background: var(--brand); animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.45); }
-    50% { box-shadow: 0 0 0 6px rgba(217, 119, 87, 0); }
+
+  /* Header & Navigation */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 4px;
+    gap: 16px;
+    flex-wrap: wrap;
   }
-  .card {
+
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    user-select: none;
+  }
+
+  .xoyan-logo-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px var(--border-glow));
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+  }
+  .logo:hover .xoyan-logo-img {
+    transform: scale(1.12) rotate(4deg);
+    filter: drop-shadow(0 4px 14px var(--ember));
+  }
+
+  .xoyan-title {
+    font-weight: 850;
+    font-size: 17px;
+    letter-spacing: 2px;
+    color: var(--fg);
+    line-height: 1;
+  }
+
+  .studio-sub {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    color: var(--ember);
+    line-height: 1;
+    margin-right: 4px;
+  }
+
+  .studio-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border: 1px solid var(--brand);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+
+  /* Xoyan Studio Hero Showcase */
+  .xoyan-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 4px 0 20px 0;
+    padding: 24px 28px;
     background: var(--card);
-    border: 1px solid var(--line); border-radius: 8px; padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
     box-shadow: var(--shadow);
   }
-  .card h2 { font-weight: 700; font-size: 20px; letter-spacing: -0.3px; margin-bottom: 14px; }
-  .composer {
-    border: 1px solid var(--line); border-radius: 8px;
+  .xoyan-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ember) 0%, var(--brand) 50%, transparent 100%);
+    opacity: 0.9;
+  }
+  .hero-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .hero-watermark {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-watermark-img {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 20px var(--border-glow));
+    opacity: 0.95;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+  }
+  .xoyan-hero:hover .hero-watermark-img {
+    transform: scale(1.08) rotate(3deg);
+    filter: drop-shadow(0 8px 28px var(--ember));
+  }
+  @media (max-width: 768px) {
+    .hero-watermark {
+      display: none;
+    }
+  }
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .hero-chip {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.9px;
+    color: var(--ember);
+    background: var(--ember-soft);
+    border: 1px solid rgba(255, 106, 26, 0.3);
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .hero-chip-muted {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--muted);
     background: var(--well);
-    transition: border-color 0.15s ease;
-    position: relative;
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
   }
-  .styles-pop {
-    position: absolute; left: 10px; top: calc(100% + 8px); z-index: 20;
-    width: min(560px, calc(100% - 20px));
-    max-height: 260px; overflow-y: auto;
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 8px; padding: 14px; box-shadow: var(--shadow);
-    opacity: 0; transform: translateY(-4px) scale(0.98);
-    pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  .hero-title {
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--fg);
+    letter-spacing: -0.3px;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
   }
-  .styles-pop.on {
-    opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+  .hero-desc {
+    font-size: 13.5px;
+    color: var(--fg-secondary);
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    max-width: 820px;
   }
-  .chip:active, .pill:active, .btn:active, .btn-primary:active {
-    transform: scale(0.95);
+  .hero-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-  .composer:focus-within { border-color: var(--muted); }
-  textarea {
-    width: 100%; min-height: 76px; resize: vertical; display: block;
-    background: transparent; color: var(--fg);
-    border: none; border-radius: 8px 8px 0 0;
-    padding: 14px 16px 6px; font: inherit;
+  .hero-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--fg);
+    background: var(--well);
+    border: 1px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
-  textarea:focus, select:focus { outline: none; }
-  .composer-bar {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-    padding: 8px 10px 10px;
+  .hero-badge-pill svg {
+    color: var(--ember);
   }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 28px; padding: 0 10px; border-radius: 6px;
-    border: 1px solid transparent; background: transparent;
-    color: var(--muted); font-size: 12.5px; cursor: pointer;
+  .hero-badge-pill:hover {
+    border-color: var(--ember);
+  }
+
+  .studio-nav {
+    display: inline-flex;
+    background: var(--well);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+  }
+
+  .studio-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
-  .chip:hover { background: rgba(245, 244, 237, 0.05); color: var(--fg); }
-  .chip.active { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
-  .chip select {
-    background: transparent; color: var(--fg); border: none;
-    font: inherit; font-size: 12.5px; cursor: pointer;
+
+  .studio-tab:hover {
+    color: var(--fg);
   }
-  .chip select option { background: var(--card); }
-  .seg {
-    display: inline-flex; border: 1px solid var(--line); border-radius: 6px;
-    overflow: hidden;
+
+  .studio-tab.active {
+    background: var(--card);
+    color: var(--fg);
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+    font-weight: 600;
   }
-  .seg-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 28px; padding: 0 12px; border: none; background: transparent;
-    color: var(--muted); font-size: 12.5px; cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  .seg-btn + .seg-btn { border-left: 1px solid var(--line); }
-  .seg-btn:hover { color: var(--fg); }
-  .seg-btn.active { color: var(--brand); background: var(--brand-soft); }
-  .section-label { margin: 18px 0 8px; }
-  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
-  .pill {
-    height: 24px; padding: 0 12px; border-radius: 12px;
-    border: 1px solid var(--line); background: transparent;
-    color: var(--muted); font-size: 12px; cursor: pointer;
-    display: inline-flex; align-items: center;
-    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+  .theme-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--well);
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
   }
-  .pill:hover { border-color: var(--muted); color: var(--fg); }
-  .pill.active {
-    border-color: var(--brand); color: var(--brand);
-    background: var(--brand-soft);
+
+  .theme-btn:hover {
+    border-color: var(--brand);
+    color: var(--fg);
+    transform: translateY(-1px);
   }
-  .pill-more { border-style: dashed; }
-  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 16px; }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    display: inline-block;
+  }
+
+  .status-dot.busy {
+    background: var(--brand);
+    box-shadow: 0 0 0 4px var(--brand-soft);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
+    50% { box-shadow: 0 0 0 6px var(--brand-soft); }
+  }
+
+  /* Cards & Containers */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card h2 {
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    color: var(--fg);
+  }
+
+  .eyebrow {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .subtext {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  /* Form Controls */
+  input.title-input, textarea, select {
+    background: var(--well);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    padding: 8px 12px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input.title-input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 2px var(--brand-soft);
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+  }
+
   select {
-    background: var(--card); color: var(--fg);
-    border: 1px solid var(--line); border-radius: 6px;
-    padding: 6px 10px; font: inherit; font-size: 13px;
+    cursor: pointer;
   }
-  .field { display: flex; align-items: center; gap: 8px; }
-  .field label { font-size: 13px; color: var(--muted); }
+
+  /* Buttons */
   .btn {
-    border: 1px solid var(--line); border-radius: 6px;
-    background: transparent; color: var(--fg);
-    padding: 8px 16px; font: inherit; font-size: 13px; cursor: pointer;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--well);
+    color: var(--fg);
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.05s ease;
+    user-select: none;
   }
-  .btn:hover { border-color: var(--muted); background: rgba(245, 244, 237, 0.04); }
-  .btn-icon {
-    padding: 8px 11px; line-height: 0;
-    display: inline-flex; align-items: center; justify-content: center;
+
+  .btn:hover {
+    border-color: var(--line-strong);
+    background: var(--card-hover);
   }
-  #play { color: var(--brand); border-color: var(--brand); }
-  #play:hover { background: var(--brand-soft); }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
   .btn-primary {
-    background: var(--brand); border: 1px solid var(--brand);
-    color: #1E1D1B; font-weight: 700; margin-left: auto;
-    padding: 8px 20px; border-radius: 6px; font-size: 13px; cursor: pointer;
-    box-shadow: 0 4px 14px rgba(217, 119, 87, 0.25);
+    background: var(--brand);
+    border: 1px solid var(--brand);
+    color: var(--brand-contrast);
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--brand-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
   }
-  .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 6px 18px rgba(217, 119, 87, 0.35); }
-  .btn-primary:disabled { opacity: 0.5; cursor: default; filter: none; }
-  #progress-row { display: none; margin-top: 16px; }
-  #progress-row.on { display: block; }
-  .bar-track { height: 2px; background: var(--line); border-radius: 1px; }
-  .bar-fill { height: 2px; width: 0%; background: var(--brand); border-radius: 1px; transition: width 0.4s linear; }
-  .progress-meta { display: flex; justify-content: space-between; margin-top: 6px; color: var(--muted); }
+
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 14px var(--brand-soft);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: none;
+  }
+
+  .btn-icon {
+    padding: 7px 10px;
+    line-height: 0;
+  }
+
+  /* Composer Container */
+  .composer {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--well);
+    position: relative;
+    transition: border-color 0.15s ease;
+  }
+
+  .composer:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 2px var(--brand-soft);
+  }
+
+  .composer textarea {
+    border: none;
+    background: transparent;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 14px;
+  }
+
+  .composer textarea:focus {
+    box-shadow: none;
+  }
+
+  .composer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-top: 1px solid var(--line);
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  /* Chips, Pills & Segments */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .chip:hover {
+    color: var(--fg);
+    border-color: var(--line-strong);
+  }
+
+  .chip.active {
+    color: var(--brand);
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+
+  .chip select {
+    background: transparent;
+    color: var(--fg);
+    border: none;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .chip select option {
+    background: var(--card);
+    color: var(--fg);
+  }
+
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .seg-btn + .seg-btn { border-left: 1px solid var(--line); }
+  .seg-btn:hover { color: var(--fg); }
+  .seg-btn.active { color: var(--brand); background: var(--brand-soft); font-weight: 600; }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--well);
+    color: var(--muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .pill:hover { border-color: var(--line-strong); color: var(--fg); }
+  .pill.active {
+    border-color: var(--brand);
+    color: var(--brand);
+    background: var(--brand-soft);
+    font-weight: 600;
+  }
+
+  /* Shorts Studio Components */
+  .drop-zone {
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 10px;
+    background: var(--well);
+    padding: 36px 20px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    margin-top: 14px;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    color: var(--fg);
+  }
+
+  .drop-hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+  .shorts-player-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .phone-frame {
+    width: 250px;
+    height: 444px;
+    flex: none;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--line-strong);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .phone-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .shorts-player-details {
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: var(--brand-soft);
+    border: 1px solid var(--brand);
+    color: var(--brand);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .hook-quote {
+    border-left: 2px solid var(--brand);
+    padding-left: 14px;
+    margin-top: 12px;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--fg);
+    line-height: 1.5;
+  }
+
+  .shorts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .short-card {
+    background: var(--well);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .short-card:hover {
+    border-color: var(--brand);
+    transform: translateY(-2px);
+  }
+
+  .short-thumb {
+    width: 100%;
+    aspect-ratio: 9/16;
+    background: #080808;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .short-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .short-card-info { padding: 10px 12px; }
+  .short-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .short-card-meta {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .short-card.selected {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 1.5px var(--brand);
+  }
+
+  .short-card-check {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 6;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: rgba(18, 18, 17, 0.85);
+    border: 1.5px solid var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .short-card.selected .short-card-check {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--brand-contrast);
+  }
+
+  .short-card-order-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 6;
+    background: var(--brand);
+    color: var(--brand-contrast);
+    font-weight: 700;
+    font-size: 10.5px;
+    border-radius: 10px;
+    padding: 1px 7px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .combine-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    color: var(--fg);
+  }
+
+  .combine-chip .chip-order {
+    font-weight: 700;
+    color: var(--brand);
+    margin-right: 2px;
+  }
+
+  .combine-chip button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 3px;
+    font-size: 11px;
+  }
+
+  .combine-chip button:hover { color: var(--fg); }
+
+  /* Audio Studio Waveform & Player */
   #player-card { display: none; }
   #player-card.on { display: block; }
-  #wave { width: 100%; height: 120px; display: block; margin: 12px 0; }
+  #wave { width: 100%; height: 120px; display: block; margin: 12px 0; cursor: pointer; }
+  .bar-track { height: 3px; background: var(--line); border-radius: 1.5px; }
+  .bar-fill { height: 3px; width: 0%; background: var(--brand); border-radius: 1.5px; transition: width 0.4s linear; }
   .player-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   #volume {
     appearance: none; -webkit-appearance: none;
@@ -178,127 +936,300 @@
   }
   #mute { color: var(--muted); padding: 4px; }
   #mute:hover { color: var(--fg); }
-  .time { color: var(--muted); }
+  .time { color: var(--muted); font-size: 12.5px; }
   .stars { display: inline-flex; gap: 2px; margin-left: auto; }
   .star { cursor: pointer; color: var(--line); font-size: 17px; background: none; border: none; padding: 0 1px; }
   .star.on { color: var(--brand); }
+
   .track {
     display: flex; align-items: center; gap: 12px;
-    padding: 11px 10px; margin: 0 -10px;
+    padding: 10px 12px; margin: 0 -8px;
     border-bottom: 1px solid var(--line); border-radius: 6px;
     cursor: pointer;
     transition: background 0.15s ease;
   }
   .track:last-child { border-bottom: none; }
-  .track:hover { background: rgba(245, 244, 237, 0.045); }
-  .track.playing .track-title { color: var(--brand); }
-  .track-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .track:hover { background: var(--card-hover); }
+  .track.playing .track-title { color: var(--brand); font-weight: 600; }
+  .track-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
   .track-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
-  .quality-pill {
-    height: 18px; padding: 0 8px; border-radius: 9px;
-    border: 1px solid var(--line); color: var(--muted);
-    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
-    display: inline-flex; align-items: center;
-  }
-  .track-stars { color: var(--brand); font-size: 12px; letter-spacing: 1px; }
+
   .thumb {
     flex: none; border-radius: 6px; overflow: hidden;
-    width: 34px; height: 34px; background: var(--well);
+    width: 36px; height: 36px; background: var(--well);
   }
   .thumb svg { display: block; width: 100%; height: 100%; }
-  .thumb svg .drift {
-    transform-box: fill-box; transform-origin: center;
-  }
-  @keyframes drift-a {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(5px, -6px) rotate(8deg); }
-  }
-  @keyframes drift-b {
-    from { transform: translate(0, 0) rotate(0deg); }
-    to { transform: translate(-6px, 5px) rotate(-7deg); }
-  }
-  @keyframes drift-c {
-    from { transform: translate(0, 0) scale(1); }
-    to { transform: translate(3px, 5px) scale(1.12); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .thumb svg .drift { animation: none !important; }
-  }
   .thumb-lg { width: 64px; height: 64px; border-radius: 8px; }
   .player-head { display: flex; gap: 14px; align-items: center; }
   .player-meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-  .track-pending { cursor: default; }
-  .track-pending .track-title {
-    background: linear-gradient(90deg, var(--muted) 25%, var(--fg) 50%, var(--muted) 75%);
-    background-size: 200% 100%;
-    -webkit-background-clip: text; background-clip: text;
-    color: transparent;
-    animation: shimmer 1.6s linear infinite;
+
+  /* Soundbars visualizer */
+  .sound-bars {
+    display: inline-flex; align-items: flex-end; gap: 2.5px; height: 13px; margin-left: 8px; vertical-align: middle;
   }
-  @keyframes shimmer { to { background-position: -200% 0; } }
-  .thumb-pending {
-    background: linear-gradient(135deg, var(--well), var(--line));
-    animation: pulse 1.4s ease-in-out infinite;
+  .sound-bar {
+    width: 2.5px; background: var(--brand); border-radius: 1px;
+    animation: soundwave 0.8s ease-in-out infinite alternate;
   }
-  #quick-actions { margin-top: 12px; }
-  .chev { opacity: 0.55; }
-  .edit-btn {
-    flex: none; background: none; border: none; cursor: pointer;
-    color: var(--muted); line-height: 0; padding: 4px; border-radius: 4px;
-    opacity: 0; transition: opacity 0.15s ease, color 0.15s ease;
+  .sound-bar:nth-child(1) { height: 4px; animation-delay: 0.1s; }
+  .sound-bar:nth-child(2) { height: 11px; animation-delay: 0.3s; }
+  .sound-bar:nth-child(3) { height: 7px; animation-delay: 0.15s; }
+  .sound-bar:nth-child(4) { height: 13px; animation-delay: 0.4s; }
+  @keyframes soundwave {
+    0% { height: 3px; }
+    100% { height: 13px; }
   }
-  .track:hover .edit-btn, .player-head:hover .edit-btn { opacity: 1; }
-  .edit-btn:hover { color: var(--fg); }
-  .title-input {
-    background: var(--well); color: var(--fg);
-    border: 1px solid var(--muted); border-radius: 4px;
-    font: inherit; padding: 2px 8px; width: 100%; min-width: 120px;
+
+  /* Stepper */
+  .pipeline-stepper {
+    display: flex; align-items: center; gap: 6px; overflow-x: auto;
+    padding: 10px 0 6px; margin-bottom: 8px;
   }
-  .title-input:focus { outline: none; border-color: var(--brand); }
-  #setup-note, #error-note {
-    display: none; border: 1px solid var(--brand); border-radius: 4px;
-    padding: 12px 16px; font-size: 13px; color: var(--muted);
+  .step-pill {
+    padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 500;
+    color: var(--muted); background: var(--well); border: 1px solid var(--line);
+    white-space: nowrap; transition: all 0.2s ease;
   }
-  #setup-note.on, #error-note.on { display: block; }
-  .footer { color: var(--muted); font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 700; text-align: center; }
+  .step-pill.active {
+    color: var(--brand); border-color: var(--brand); background: var(--brand-soft);
+    font-weight: 600;
+  }
+  .step-pill.done {
+    color: var(--fg); border-color: var(--line); background: var(--card);
+  }
+  .step-arrow { color: var(--muted); font-size: 10px; opacity: 0.5; }
+
+  /* Overlay Video Pills */
+  .video-overlay-pill {
+    position: absolute; z-index: 5;
+    background: rgba(18, 18, 17, 0.78); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+    padding: 3px 8px; font-size: 10.5px; color: #FFFFFF;
+  }
+  .video-overlay-top-left { top: 10px; left: 10px; }
+  .video-overlay-top-right { top: 10px; right: 10px; }
+  .video-speed-controls {
+    display: inline-flex; gap: 4px; align-items: center; margin-top: 10px;
+  }
+  .speed-pill {
+    border: 1px solid var(--line); background: var(--well);
+    color: var(--muted); font-size: 11px; padding: 2px 7px;
+    border-radius: 4px; cursor: pointer; transition: all 0.15s ease;
+  }
+  .speed-pill:hover, .speed-pill.active {
+    color: var(--fg); border-color: var(--brand); background: var(--brand-soft);
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 13px; height: 13px;
+    border: 2px solid rgba(125, 125, 125, 0.25);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    display: inline-block; vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Drop overlay */
   #drop-overlay {
-    position: fixed; inset: 0; display: none; z-index: 10;
-    background: rgba(38, 38, 36, 0.92);
+    position: fixed; inset: 0; display: none; z-index: 100;
+    background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(4px);
     align-items: center; justify-content: center;
   }
   #drop-overlay.on { display: flex; }
   .drop-box {
-    border: 1.6px dashed var(--brand); border-radius: 4px; color: var(--brand);
-    padding: 48px 64px; font-weight: 700; letter-spacing: 1.8px;
-    text-transform: uppercase; font-size: 13px;
+    border: 2px dashed var(--brand); border-radius: 12px; color: var(--brand);
+    padding: 48px 64px; font-weight: 700; letter-spacing: 1px;
+    font-size: 15px; text-align: center; background: var(--card);
   }
-  .drop-hint { color: var(--muted); font-size: 12px; margin-top: 12px; }
-  #wave { cursor: pointer; }
-  #audit-panel { display: none; margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
-  #audit-panel.on { display: block; }
-  .audit-line { font-size: 13px; margin-top: 6px; color: var(--fg); }
-  .audit-line .lvl {
-    font-weight: 700; letter-spacing: 1px; font-size: 10px;
-    text-transform: uppercase; margin-right: 8px; color: var(--muted);
+
+  /* Status Notes */
+  #setup-note, #error-note {
+    display: none; border: 1px solid var(--brand); border-radius: 8px;
+    padding: 12px 16px; font-size: 13px; color: var(--fg);
+    background: var(--brand-soft);
   }
-  .audit-line .lvl-warn { color: var(--brand); }
-  .audit-fix { color: var(--muted); }
-  #similar-strength { display: none; margin-top: 12px; align-items: center; }
-  #similar-strength.on { display: flex; }
+  #setup-note.on, #error-note.on { display: block; }
+
+  /* Studio Footers (Rendered in Every Tab) */
+  .studio-footer {
+    margin-top: 32px;
+    padding: 18px 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .footer-author {
+    color: var(--fg);
+    font-weight: 500;
+  }
+  .author-highlight {
+    color: var(--brand);
+    font-weight: 700;
+  }
+  .footer-dot {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+  .xoyan-brand-link {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+  }
+  .xoyan-brand-link:hover {
+    color: var(--brand);
+  }
+  .xoyan-domain-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    transition: color 0.15s ease;
+  }
+  .xoyan-domain-link:hover {
+    color: var(--brand);
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--brand-soft);
+    color: var(--brand);
+    border: 1px solid var(--brand);
+  }
+  .footer-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 640px) {
+    header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .studio-nav {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .studio-tab {
+      flex: 1;
+      justify-content: center;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+    .phone-frame {
+      width: 100%;
+      height: 480px;
+    }
+    .shorts-grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
 </style>
 </head>
 <body>
 <div id="drop-overlay"><div class="drop-box">Drop your song</div></div>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Claude Music</div>
-    <div style="display:flex; align-items:center; gap:14px;">
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div class="logo">
+        <img src="/assets/xoyan-logo.png" alt="Xoyan Logo" class="xoyan-logo-img" width="28" height="28">
+        <span class="xoyan-title">XOYAN</span>
+        <span class="studio-sub">STUDIO</span>
+        <span id="active-studio-badge" class="studio-badge">Music Studio</span>
+      </div>
+      <div class="studio-nav">
+        <button class="studio-tab active" id="tab-music">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/></svg>
+          Music Studio
+        </button>
+        <button class="studio-tab" id="tab-shorts">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+          Shorts Studio
+        </button>
+        <button class="studio-tab" id="tab-voiceover">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          Voiceover AI
+        </button>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="theme-btn" id="theme-toggle-btn" title="Toggle Light / Dark Theme" type="button">
+        <svg id="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-sun" style="display:none;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
       <button class="edit-btn" id="settings-btn" title="Settings" style="opacity:1">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h.01a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h.01a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.01a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       </button>
-      <span class="status-dot" id="dot"></span>
+      <span class="status-dot" id="dot" title="Local Engine Status"></span>
     </div>
   </header>
+
+  <!-- Xoyan Studio Brand Hero -->
+  <div class="xoyan-hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="hero-chip">100% PRIVATE ON-DEVICE</span>
+        <span class="hero-chip-muted">ZERO SUBSCRIPTIONS</span>
+        <span class="hero-chip-muted">FULL COMMERCIAL RIGHTS</span>
+      </div>
+      <h1 class="hero-title">Xoyan Studio: The All-in-One Private AI Suite for Creators.</h1>
+      <p class="hero-desc">No subscriptions, no cloud fees, no video watermarks. AI Music, Vertical Shorts &amp; Voiceover running 100% locally on your PC.</p>
+      <div class="hero-badges">
+        <div class="hero-badge-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Air-Gapped Local Privacy
+        </div>
+        <div class="hero-badge-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Zero Cloud Queueing
+        </div>
+        <div class="hero-badge-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+          No Watermarks
+        </div>
+        <div class="hero-badge-pill">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Unlimited Lifetime Renders
+        </div>
+      </div>
+    </div>
+    <div class="hero-watermark">
+      <img src="/assets/xoyan-logo.png" alt="Xoyan Brand" class="hero-watermark-img" width="96" height="96">
+    </div>
+  </div>
 
   <div class="card" id="settings-card" style="display:none">
     <div class="eyebrow" style="margin-bottom:12px">Settings</div>
@@ -310,9 +1241,10 @@
     <div class="drop-hint">Where generated songs, uploads, and optimized copies are saved. The folder is created if it does not exist; existing songs stay where they are.</div>
   </div>
 
-  <div id="setup-note">ACE-Step is not configured yet. Run <span class="mono">bash install.sh</span> in the claude-music repo, then reload this page.</div>
+  <div id="setup-note">Audio Engine is initializing or not configured yet. Run <span class="mono">powershell -File .\install.ps1</span> (or bash install.sh), then reload this page.</div>
   <div id="error-note"></div>
 
+  <div id="view-music" style="display:flex; flex-direction:column; gap:20px;">
   <div class="card">
     <h2>Generate song</h2>
     <div class="composer">
@@ -363,15 +1295,38 @@
       </div>
     </div>
     <div id="progress-row">
+      <div class="pipeline-stepper" id="music-stepper">
+        <div class="step-pill active" id="m-step-1">1. Concept</div>
+        <div class="step-arrow">→</div>
+        <div class="step-pill" id="m-step-2">2. Structure</div>
+        <div class="step-arrow">→</div>
+        <div class="step-pill" id="m-step-3">3. Diffusion Audio</div>
+        <div class="step-arrow">→</div>
+        <div class="step-pill" id="m-step-4">4. Mastered Track</div>
+      </div>
       <div class="bar-track"><div class="bar-fill" id="bar"></div></div>
       <div class="progress-meta mono">
         <span id="stage">Starting</span><span id="pct">0%</span>
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+        <button type="button" class="btn" id="btn-cancel-music" style="color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.08); font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          <span id="cancel-music-label">Stop Generation & Clear Memory</span>
+        </button>
       </div>
     </div>
   </div>
 
   <div class="card" id="player-card">
-    <div class="eyebrow" id="player-eyebrow">Now playing</div>
+    <div style="display:flex; align-items:center;">
+      <div class="eyebrow" id="player-eyebrow">Now playing</div>
+      <div class="sound-bars" id="audio-bars" style="display:none">
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+      </div>
+    </div>
     <div class="player-head" style="margin-top:8px">
       <div class="thumb thumb-lg" id="player-art"></div>
       <div style="min-width:0; flex:1">
@@ -405,6 +1360,10 @@
           <circle cx="13" cy="11" r="1.8" fill="var(--card)"/>
         </svg><span id="optimize-label">Optimize</span>
       </button>
+      <button class="btn" id="btn-make-video" title="Convert to 9:16 vertical video short with dancing waveform visualizer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:4px;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span id="make-video-label">Create 9:16 Short</span>
+      </button>
       <span class="stars" id="stars"></span>
     </div>
     <div class="pills" id="quick-actions">
@@ -434,7 +1393,7 @@
 /music cover       Remake a song in a different style
 /music repaint     Edit a section of a song
 /music compose     Songwriting help (lyrics, caption, BPM)
-/music export      Export for Spotify/YouTube/TikTok/etc
+/music export      Export for streaming platforms (lossless / MP3)
 /music analyze     Check BPM, key, loudness
 /music enhance     Normalize, denoise, separate stems
 /music random      Random generation (surprise me!)
@@ -443,7 +1402,440 @@
 /music setup       Check if everything works</pre>
   </div>
 
-  <div class="footer">No cloud API &middot; Everything runs on your machine</div>
+  <footer class="studio-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-author">by <strong class="author-highlight">Sneh Dutta</strong></span>
+        <span class="footer-dot">&bull;</span>
+        <span class="footer-xoyan">founder of <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-brand-link">Xoyan</a></span>
+        <span class="footer-dot">&bull;</span>
+        <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-domain-link">www.xoyan.org</a>
+      </div>
+      <div class="footer-right">
+        <span class="footer-pill">Local Engine</span>
+        <span class="footer-sub">Zero Cloud Fees &middot; Music Studio</span>
+      </div>
+    </div>
+  </footer>
+  </div><!-- /#view-music -->
+
+  <div id="view-shorts" style="display:none; flex-direction:column; gap:20px;">
+    <!-- Shorts Generator Card -->
+    <div class="card">
+      <h2>Create Vertical Shorts & Reels</h2>
+      <p class="subtext">Drop any offline video or enter its file path directly to automatically detect viral hooks, transcribe speech with word-level timing, and crop to 9:16 vertical format. Local paths are used in-place with zero copying; existing uploads are automatically reused.</p>
+
+      <div class="drop-zone" id="shorts-dropzone">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="font-weight:600; font-size:14px; margin-top:10px;">Drag & drop your offline video here</div>
+        <div class="drop-hint">Local files run in-place with zero copying &middot; Reuses existing uploads automatically</div>
+        <div style="margin-top:14px;">
+          <button class="btn" id="shorts-browse-btn" type="button">Browse offline video...</button>
+          <input type="file" id="shorts-file-input" accept="video/*" multiple style="display:none">
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label class="field-label">Or enter local file path / video URL</label>
+        <div style="display:flex; gap:10px;">
+          <input class="title-input mono" id="shorts-source" placeholder="C:\path\to\your_video.mp4 or video URL..." style="flex:1;">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:18px; align-items:flex-end; flex-wrap:wrap; gap:12px;">
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Editing Engine</label>
+          <select id="shorts-edit-mode">
+            <option value="pro_autoedit" selected>✨ Pro Auto-Editor (Reels / Shorts / TikTok)</option>
+            <option value="standard">Standard AI Highlights</option>
+          </select>
+        </div>
+
+        <div class="field" id="field-target-duration" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Target Runtime</label>
+          <select id="shorts-target-duration">
+            <option value="15">15 seconds</option>
+            <option value="20">20 seconds</option>
+            <option value="24" selected>24 seconds (Optimized)</option>
+            <option value="30">30 seconds (Standard Reel)</option>
+            <option value="45">45 seconds</option>
+            <option value="60">60 seconds (Full Short)</option>
+          </select>
+        </div>
+
+        <div class="field" id="field-num-clips" style="flex-direction:column; align-items:flex-start; display:none;">
+          <label class="field-label">Clips count</label>
+          <select id="shorts-num-clips">
+            <option value="1">1 Short</option>
+            <option value="3" selected>3 Shorts</option>
+            <option value="5">5 Shorts</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Aspect ratio</label>
+          <select id="shorts-ratio">
+            <option value="9:16" selected>9:16 (Vertical)</option>
+            <option value="1:1">1:1 (Square)</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Layout</label>
+          <select id="shorts-layout">
+            <option value="single" selected>Full Vertical</option>
+            <option value="split">Split Screen (Face + B-Roll)</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Clip Selection & Diversity</label>
+          <select id="shorts-clip-focus">
+            <option value="top_hooks" selected>🎯 Top Viral Hooks</option>
+            <option value="alternative">🎲 Alternative / Different Scenes (Re-roll)</option>
+            <option value="diverse">🌐 Diverse Spread (Beginning, Middle, End)</option>
+            <option value="first_half">🎬 First Half of Video</option>
+            <option value="middle">📖 Middle Story</option>
+            <option value="ending">💥 Climax & Ending</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Dialogue Captions</label>
+          <select id="shorts-captions">
+            <option value="hormozi" selected>🔥 Animated Hormozi (Bold Highlight)</option>
+            <option value="clean">✨ Clean Minimal White</option>
+            <option value="none">🚫 Hide Captions (No Dialogue Text)</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Progress Bar Timer</label>
+          <select id="shorts-progress-bar">
+            <option value="none" selected>None</option>
+            <option value="red">🔴 Red Line (TikTok Style)</option>
+            <option value="yellow">🟡 Yellow Accent</option>
+            <option value="cyan">🔷 Cyan Neon</option>
+            <option value="white">⚪ White Minimal</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Sticker Badge</label>
+          <select id="shorts-sticker-badge">
+            <option value="" selected>None</option>
+            <option value="🔥 MUST WATCH">🔥 MUST WATCH</option>
+            <option value="😱 WAIT FOR IT">😱 WAIT FOR IT</option>
+            <option value="⚠️ PART 1">⚠️ PART 1</option>
+            <option value="🤫 TOP SECRET">🤫 TOP SECRET</option>
+            <option value="💡 LIFE HACK">💡 LIFE HACK</option>
+            <option value="🔊 SOUND ON">🔊 SOUND ON</option>
+            <option value="🚨 BREAKING">🚨 BREAKING</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Color Grade</label>
+          <select id="shorts-color-grade">
+            <option value="enhanced" selected>✨ Enhanced (Punchy Contrast)</option>
+            <option value="warm">🌅 Warm Golden Hour</option>
+            <option value="teal">🎬 Moody Teal & Orange</option>
+            <option value="bw">🎞️ Dramatic B&W</option>
+            <option value="vibrant">🌈 Hyper-Vibrant</option>
+            <option value="none">📷 Original Raw</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Compilation</label>
+          <select id="shorts-combine-mode">
+            <option value="separate" selected>Separate Shorts</option>
+            <option value="combine">Combine into 1 Short (Montage)</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Virality model</label>
+          <select id="shorts-provider">
+            <option value="offline" selected>Offline Cadence (No API key)</option>
+            <option value="gemini">Gemini 2.5 Flash (AI Hook)</option>
+          </select>
+        </div>
+
+        <div class="field" style="flex-direction:column; align-items:flex-start; flex:1; min-width:180px;">
+          <label class="field-label">Add AI Background Music</label>
+          <select id="shorts-bg-music" style="width:100%;">
+            <option value="">None (Original audio only)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:10px; width:100%; margin-top:12px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="field" style="flex-direction:column; align-items:flex-start; flex:1; min-width:200px;">
+            <label class="field-label">Target Topic / Focus Keyword (Optional)</label>
+            <input class="title-input" id="shorts-keyword" placeholder="e.g. real estate, productivity, trading..." style="width:100%;">
+          </div>
+          <div class="field" style="flex-direction:column; align-items:flex-start; flex:1; min-width:220px;">
+            <label class="field-label">Custom Hook / Headline Banner (Optional)</label>
+            <input class="title-input" id="shorts-custom-text" placeholder="e.g. WAIT FOR IT 😱 or How I made $10k..." style="width:100%;">
+          </div>
+          <div class="field" style="flex-direction:column; align-items:flex-start; width:160px;">
+            <label class="field-label">Banner Position</label>
+            <select id="shorts-custom-text-pos" style="width:100%;">
+              <option value="top" selected>Top Banner (Safe Zone)</option>
+              <option value="middle">Middle Center</option>
+              <option value="bottom">Bottom Overlay</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; margin-left:auto;">
+            <button class="btn" id="shorts-reroll-btn" type="button" title="Request totally different clips from the same video" style="white-space:nowrap;">
+              🎲 Re-roll Different Clips
+            </button>
+            <button class="btn-primary" id="shorts-generate-btn" style="white-space:nowrap;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span id="shorts-generate-label">Generate Shorts</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="shorts-progress-row" style="display:none; margin-top:20px;">
+        <div class="pipeline-stepper" id="shorts-stepper">
+          <div class="step-pill active" id="s-step-1">1. Video Ingest</div>
+          <div class="step-arrow">→</div>
+          <div class="step-pill" id="s-step-2">2. Whisper Speech</div>
+          <div class="step-arrow">→</div>
+          <div class="step-pill" id="s-step-3">3. Viral Hooks</div>
+          <div class="step-arrow">→</div>
+          <div class="step-pill" id="s-step-4">4. Face Tracking 9:16</div>
+          <div class="step-arrow">→</div>
+          <div class="step-pill" id="s-step-5">5. Render Short</div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="shorts-bar"></div></div>
+        <div class="progress-meta mono" style="margin-top:8px;">
+          <span id="shorts-stage">Initializing...</span>
+          <span id="shorts-pct">0%</span>
+        </div>
+        <div id="shorts-log" class="mono" style="font-size:12px; color:var(--muted); margin-top:6px;"></div>
+        <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+          <button type="button" class="btn" id="btn-cancel-shorts" style="color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.08); font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            <span id="cancel-shorts-label">Cancel Processing & Purge Memory</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Short Player Card -->
+    <div class="card" id="shorts-player-card" style="display:none;">
+      <div class="eyebrow" style="margin-bottom:12px;">Active Short Preview</div>
+      <div class="shorts-player-layout">
+        <div class="phone-frame">
+          <span class="video-overlay-pill video-overlay-top-left mono" id="video-overlay-time">0:00</span>
+          <span class="video-overlay-pill video-overlay-top-right" id="video-overlay-ratio">9:16 Vertical</span>
+          <video id="shorts-video" controls playsinline></video>
+        </div>
+        <div class="shorts-player-details">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="score-badge" id="shorts-view-score">92 Viral Score</span>
+            <span class="time mono" id="shorts-view-duration">0:45</span>
+          </div>
+          <h3 id="shorts-view-title" style="margin-top:12px; font-size:18px; font-weight:700;">Short Clip</h3>
+          <blockquote class="hook-quote" id="shorts-view-hook">"Hook sentence..."</blockquote>
+          <p class="subtext" id="shorts-view-reason" style="margin-top:12px;"></p>
+
+          <div class="video-speed-controls">
+            <span class="field-label" style="margin:0 4px 0 0;">Speed:</span>
+            <button class="speed-pill active" data-speed="1">1x</button>
+            <button class="speed-pill" data-speed="1.25">1.25x</button>
+            <button class="speed-pill" data-speed="1.5">1.5x</button>
+            <button class="speed-pill" data-speed="2">2x</button>
+          </div>
+
+          <!-- Precision Clip Trimmer -->
+          <div style="margin-top:16px; padding:12px 14px; background:var(--well); border:1px solid var(--line); border-radius:8px;">
+            <div class="eyebrow" style="margin-bottom:8px;">Interactive Clip Trimmer & Elements</div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <div class="field">
+                <label class="field-label" style="margin:0;">Start:</label>
+                <button class="btn btn-icon" id="trim-start-minus" style="padding:2px 8px;">-1s</button>
+                <input type="number" id="trim-start" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
+                <button class="btn btn-icon" id="trim-start-plus" style="padding:2px 8px;">+1s</button>
+              </div>
+              <div class="field">
+                <label class="field-label" style="margin:0;">End:</label>
+                <button class="btn btn-icon" id="trim-end-minus" style="padding:2px 8px;">-1s</button>
+                <input type="number" id="trim-end" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
+                <button class="btn btn-icon" id="trim-end-plus" style="padding:2px 8px;">+1s</button>
+              </div>
+              <div class="field">
+                <label class="field-label" style="margin:0;">Captions:</label>
+                <select id="trim-captions" style="padding:3px 8px; font-size:12px;">
+                  <option value="hormozi" selected>Hormozi</option>
+                  <option value="clean">Clean White</option>
+                  <option value="none">Hide (No Captions)</option>
+                </select>
+              </div>
+              <button class="btn" id="btn-recut-short" style="margin-left:auto; font-weight:600;">Re-cut Clip</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+              <input class="title-input" id="trim-custom-text" placeholder="Add custom hook banner (e.g. PART 2 or MUST WATCH)..." style="flex:1; font-size:12px; padding:4px 8px;">
+            </div>
+          </div>
+
+          <div class="player-controls" style="margin-top:16px; gap:8px;">
+            <a class="btn btn-primary" id="shorts-download-link" download>Download Short</a>
+            <button class="btn" id="shorts-reroll-card-btn" title="Generate different clips from the same video">🎲 Different Clips</button>
+            <button class="btn" id="shorts-metadata-btn">Viral Metadata & Hashtags</button>
+            <button class="btn" id="shorts-mix-action-btn">Add AI Music</button>
+          </div>
+
+          <!-- Edit Decision List (EDL) viewer -->
+          <div id="shorts-edl-box" style="display:none; margin-top:16px; padding:12px 14px; background:var(--well); border:1px solid var(--line); border-radius:8px;">
+            <div class="eyebrow" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+              <span>Edit Decision List (EDL) · Punch-In Zooms & Cuts</span>
+              <span id="shorts-edl-count" class="mono" style="color:var(--accent); font-size:11px;"></span>
+            </div>
+            <div id="shorts-edl-list" style="max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; font-size:11px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rendered Shorts Library Grid -->
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+        <div class="eyebrow" style="margin-bottom:0;">Rendered Shorts Library</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="btn" id="btn-toggle-multi-select" type="button" style="font-size:12px; padding:4px 10px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:4px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span id="combine-toggle-label">Select Clips to Combine</span> (<span id="combine-count">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi-Clip Combine Control Bar -->
+      <div id="combine-bar" style="display:none; padding:14px 16px; background:var(--well); border:1px solid var(--line); border-radius:8px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:600; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Combine <span id="combine-clips-num">0</span> Clips into 1 Short</span>
+            </div>
+            <div class="drop-hint" id="combine-duration-hint" style="margin-top:2px;">Total duration: ~0s &middot; Clips will be concatenated in the order below.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input id="combine-title" class="title-input mono" placeholder="Compilation Title (e.g. Best Moments)" style="width:200px; font-size:12px; padding:5px 8px;">
+            <select id="combine-bg-music" style="font-size:12px; padding:5px 8px; max-width:160px;">
+              <option value="">No background music</option>
+            </select>
+            <button class="btn-primary" id="btn-do-combine" style="padding:6px 14px; font-size:12px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:4px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span id="btn-do-combine-label">Merge into 1 Short</span>
+            </button>
+            <button class="btn" id="btn-clear-combine" style="padding:6px 10px; font-size:12px;">Clear</button>
+          </div>
+        </div>
+        <!-- Ordered Selected Clips list -->
+        <div id="combine-clips-list" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);"></div>
+      </div>
+
+      <div class="shorts-grid" id="shorts-library-grid"></div>
+      <div class="drop-hint" id="shorts-library-hint" style="margin-top:14px;">Rendered vertical shorts appear here. Click any card to preview in the vertical player.</div>
+    </div>
+
+    <footer class="studio-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-author">by <strong class="author-highlight">Sneh Dutta</strong></span>
+          <span class="footer-dot">&bull;</span>
+          <span class="footer-xoyan">founder of <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-brand-link">Xoyan</a></span>
+          <span class="footer-dot">&bull;</span>
+          <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-domain-link">www.xoyan.org</a>
+        </div>
+        <div class="footer-right">
+          <span class="footer-pill">Local Engine</span>
+          <span class="footer-sub">Zero Cloud Fees &middot; Shorts Studio</span>
+        </div>
+      </div>
+    </footer>
+  </div><!-- /#view-shorts -->
+
+  <div id="view-voiceover" style="display:none; flex-direction:column; gap:20px;">
+    <div class="card">
+      <h2>Neural AI Voiceover Generator</h2>
+      <p class="subtext">Generate human-grade, expressive speech for your Shorts, TikToks, and podcasts with zero cloud fees using Edge Neural TTS.</p>
+
+      <div style="margin-top:16px;">
+        <label class="field-label">Voiceover Script</label>
+        <div class="composer">
+          <textarea id="vo-text" maxlength="4000" placeholder="Type or paste your voiceover script here... (e.g. 'Did you know that 99% of producers make this one mistake when mastering vertical audio?')"></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px;">
+        <div class="field" style="flex-direction:column; align-items:flex-start;">
+          <label class="field-label">Neural Voice</label>
+          <select id="vo-voice">
+            <option value="en-US-ChristopherNeural" selected>Christopher (US Male, Warm & Conversational)</option>
+            <option value="en-US-JennyNeural">Jenny (US Female, Upbeat & Clear)</option>
+            <option value="en-US-GuyNeural">Guy (US Male, Deep Storyteller)</option>
+            <option value="en-GB-SoniaNeural">Sonia (UK Female, Professional & Crisp)</option>
+            <option value="en-US-AriaNeural">Aria (US Female, Expressive Narrative)</option>
+            <option value="en-US-EricNeural">Eric (US Male, Casual & Modern)</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" id="vo-generate-btn" style="margin-left:auto;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:6px"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+          <span id="vo-generate-label">Synthesize Voiceover</span>
+        </button>
+      </div>
+
+      <div id="vo-player-card" style="display:none; margin-top:20px; padding:16px; background:var(--well); border:1px solid var(--line); border-radius:8px;">
+        <div class="eyebrow" style="margin-bottom:8px;">Voiceover Audio Preview</div>
+        <audio id="vo-audio" controls style="width:100%; margin-top:6px;"></audio>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:8px;">
+          <span class="mono" id="vo-file-name" style="font-size:12px; color:var(--muted);"></span>
+          <div style="display:flex; gap:8px;">
+            <button class="btn" id="vo-use-shorts-btn" type="button" style="display:inline-flex; align-items:center; gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Use in Shorts Studio
+            </button>
+            <a class="btn" id="vo-download-link" download>Download MP3</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="studio-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-author">by <strong class="author-highlight">Sneh Dutta</strong></span>
+          <span class="footer-dot">&bull;</span>
+          <span class="footer-xoyan">founder of <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-brand-link">Xoyan</a></span>
+          <span class="footer-dot">&bull;</span>
+          <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-domain-link">www.xoyan.org</a>
+        </div>
+        <div class="footer-right">
+          <span class="footer-pill">Local Engine</span>
+          <span class="footer-sub">Zero Cloud Fees &middot; Voiceover Studio</span>
+        </div>
+      </div>
+    </footer>
+  </div><!-- /#view-voiceover -->
+
+  <!-- Viral Metadata Modal -->
+  <div id="metadata-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); z-index:90; align-items:center; justify-content:center; padding:20px;">
+    <div class="card" style="max-width:640px; width:100%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:var(--shadow);">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:16px;">
+        <div class="eyebrow" style="color:var(--brand); font-size:12px;">Viral Growth & Metadata Kit</div>
+        <button class="btn btn-icon" id="close-metadata-modal" style="border:none; cursor:pointer; font-size:18px; line-height:1;">&times;</button>
+      </div>
+      <div id="metadata-modal-content">
+        <div style="text-align:center; padding:30px; color:var(--muted);"><span class="spinner"></span> Generating viral hooks and SEO metadata...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -485,7 +1877,43 @@ function updateQualityHint() {
 }
 $('quality').onchange = updateQualityHint;
 
+/* ---------- Theme Management ---------- */
+function initTheme() {
+  const saved = localStorage.getItem('cm-theme') || 'dark';
+  applyTheme(saved);
+  const btn = $('theme-toggle-btn');
+  if (btn) {
+    btn.onclick = () => {
+      const current = document.documentElement.dataset.theme || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      localStorage.setItem('cm-theme', next);
+    };
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const moon = $('theme-icon-moon');
+  const sun = $('theme-icon-sun');
+  if (moon && sun) {
+    if (theme === 'light') {
+      moon.style.display = 'none';
+      sun.style.display = 'block';
+    } else {
+      moon.style.display = 'block';
+      sun.style.display = 'none';
+    }
+  }
+  if (typeof audio !== 'undefined' && audio && audio.paused && typeof drawFrame === 'function') {
+    drawFrame();
+  }
+}
+
 async function init() {
+  initTheme();
+  const savedStudio = localStorage.getItem('cm-active-studio') || 'music';
+  if (typeof switchStudio === 'function') switchStudio(savedStudio);
   updateQualityHint();
   try {
     const status = await api('/api/status');
@@ -701,7 +2129,7 @@ function setBusy(on) {
   state.busy = on;
   $('dot').classList.toggle('busy', on);
   $('generate').disabled = on;
-  $('generate-label').textContent = on ? 'Generating...' : 'Generate';
+  $('generate-label').innerHTML = on ? '<span class="spinner"></span> Generating...' : 'Generate';
   $('progress-row').classList.toggle('on', on);
 }
 
@@ -719,10 +2147,21 @@ async function poll() {
   catch (e) { return; }
   if (snap.status === 'loading' || snap.status === 'generating') {
     const pct = Math.round((snap.pct || 0) * 100);
-    $('bar').style.width = pct + '%';
+    $('bar').style.width = Math.max(5, pct) + '%';
     $('pct').textContent = pct + '%';
     $('stage').textContent = snap.status === 'loading'
       ? 'Loading model' : (snap.stage || 'Generating');
+
+    const s1 = $('m-step-1'), s2 = $('m-step-2'), s3 = $('m-step-3'), s4 = $('m-step-4');
+    if (s1 && s2 && s3 && s4) {
+      if (snap.status === 'loading') {
+        s1.className = 'step-pill done'; s2.className = 'step-pill active'; s3.className = 'step-pill'; s4.className = 'step-pill';
+      } else if (pct < 85) {
+        s1.className = 'step-pill done'; s2.className = 'step-pill done'; s3.className = 'step-pill active'; s4.className = 'step-pill';
+      } else {
+        s1.className = 'step-pill done'; s2.className = 'step-pill done'; s3.className = 'step-pill done'; s4.className = 'step-pill active';
+      }
+    }
     return;
   }
   clearInterval(state.pollTimer);
@@ -1075,9 +2514,9 @@ $('mute').onclick = () => {
   updateVolumeUI();
 };
 
-audio.onplay = () => { $('play').innerHTML = PAUSE_ICON; startWave(); };
-audio.onpause = () => { $('play').innerHTML = PLAY_ICON; stopWave(); };
-audio.onended = () => { $('play').innerHTML = PLAY_ICON; stopWave(); };
+audio.onplay = () => { $('play').innerHTML = PAUSE_ICON; startWave(); if ($('audio-bars')) $('audio-bars').style.display = 'inline-flex'; };
+audio.onpause = () => { $('play').innerHTML = PLAY_ICON; stopWave(); if ($('audio-bars')) $('audio-bars').style.display = 'none'; };
+audio.onended = () => { $('play').innerHTML = PLAY_ICON; stopWave(); if ($('audio-bars')) $('audio-bars').style.display = 'none'; };
 audio.ontimeupdate = () => {
   $('time').textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
   const frac = isFinite(audio.duration) && audio.duration
@@ -1159,11 +2598,15 @@ function drawFrame(heights) {
     ? audio.currentTime / audio.duration : 0;
   const played = Math.floor(frac * n);
   ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+  const isLight = document.documentElement.dataset.theme === 'light';
+  const brandColor = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#1DB954';
+  const unplayedColor = isLight ? '#D1D5DB' : '#282828';
+  const cursorColor = isLight ? '#111827' : '#FFFFFF';
   for (let i = 0; i < n; i++) {
     const h = Math.max(3, hs[i]);
     const x = i * pitch, y = mid - h / 2;
-    ctx2d.fillStyle = i === played ? '#F5F4ED'
-      : i < played ? '#D97757' : '#3D3D3A';
+    ctx2d.fillStyle = i === played ? cursorColor
+      : i < played ? brandColor : unplayedColor;
     if (ctx2d.roundRect) {
       ctx2d.beginPath();
       ctx2d.roundRect(x, y, bw, h, 1);
@@ -1539,6 +2982,958 @@ function fitCanvas() {
   }
 }
 window.addEventListener('resize', fitCanvas);
+
+/* =========================================================================
+   Shorts Studio Logic
+   ========================================================================= */
+const shortsState = {
+  current: null,
+  shorts: [],
+  polling: false,
+  pollTimer: null,
+  selectedForCombine: [],
+  multiSelectMode: false,
+};
+
+// Studio navigation switcher
+$('tab-music').onclick = () => switchStudio('music');
+$('tab-shorts').onclick = () => switchStudio('shorts');
+$('tab-voiceover').onclick = () => switchStudio('voiceover');
+
+function switchStudio(name) {
+  localStorage.setItem('cm-active-studio', name);
+  document.documentElement.dataset.studio = name;
+  const badge = $('active-studio-badge');
+  if (badge) {
+    if (name === 'music') badge.textContent = 'Music Studio';
+    else if (name === 'shorts') badge.textContent = 'Shorts Studio';
+    else if (name === 'voiceover') badge.textContent = 'Voiceover Studio';
+  }
+
+  $('tab-music').classList.toggle('active', name === 'music');
+  $('tab-shorts').classList.toggle('active', name === 'shorts');
+  $('tab-voiceover').classList.toggle('active', name === 'voiceover');
+
+  $('view-music').style.display = name === 'music' ? 'flex' : 'none';
+  $('view-shorts').style.display = name === 'shorts' ? 'flex' : 'none';
+  $('view-voiceover').style.display = name === 'voiceover' ? 'flex' : 'none';
+
+  if (name === 'shorts') {
+    refreshShortsLibrary();
+    populateMusicForShorts();
+  }
+  if (audio.paused) drawFrame();
+}
+
+// Stop / Cancel button for Music Generation (purges memory & terminates process tree)
+$('btn-cancel-music').onclick = async () => {
+  const btn = $('btn-cancel-music');
+  btn.disabled = true;
+  $('cancel-music-label').textContent = 'Stopping & purging memory...';
+  try {
+    await fetch('/api/generate/cancel', { method: 'POST' });
+  } catch (e) {}
+  clearInterval(state.pollTimer);
+  state.pollTimer = null;
+  state.busy = false;
+  $('progress-row').classList.remove('on');
+  $('generate').disabled = false;
+  $('generate-label').textContent = 'Generate';
+  btn.disabled = false;
+  $('cancel-music-label').textContent = 'Stop Generation & Clear Memory';
+  const audio = $('audio');
+  if (audio) { audio.pause(); }
+  showError('Generation stopped. Process terminated and GPU/CPU memory purged.');
+};
+
+// Cancel button for Shorts Processing (kills subprocesses & cleans disk/memory cache)
+$('btn-cancel-shorts').onclick = async () => {
+  const btn = $('btn-cancel-shorts');
+  btn.disabled = true;
+  $('cancel-shorts-label').textContent = 'Cancelling & purging memory...';
+  try {
+    await fetch('/api/shorts/cancel', { method: 'POST' });
+  } catch (e) {}
+  stopShortsPolling();
+  $('shorts-progress-row').style.display = 'none';
+  btn.disabled = false;
+  $('cancel-shorts-label').textContent = 'Cancel Processing & Purge Memory';
+  const video = $('shorts-video');
+  if (video) { video.pause(); video.src = ''; }
+  showError('Shorts generation cancelled. Background processes killed and disk/memory caches cleared.');
+};
+
+// Create 9:16 Vertical Music Video from current audio track
+$('btn-make-video').onclick = async () => {
+  if (!state.current || !state.current.file) {
+    showError('Play or select an audio track first to generate a vertical music video.');
+    return;
+  }
+  const btn = $('btn-make-video');
+  const lbl = $('make-video-label');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spinner"></span> Rendering 9:16 Video...';
+  showError('Rendering 9:16 vertical music video with dancing waveform spectrum...');
+  try {
+    const res = await api('/api/music/make-video', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ audio_file: state.current.file, style: 'spectrum' })
+    });
+    showError('Vertical 9:16 Music Video ready!');
+    switchStudio('shorts');
+    await refreshShortsLibrary();
+    if (res.short) loadShort(res.short);
+  } catch (err) {
+    showError('Failed to create music video: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    lbl.textContent = 'Create 9:16 Short';
+  }
+};
+
+// Populate AI Background Music dropdown from generated music tracks
+function populateMusicForShorts() {
+  const sel = $('shorts-bg-music');
+  const selCombine = $('combine-bg-music');
+  if (sel) {
+    const curr = sel.value;
+    sel.innerHTML = '<option value="">None (Original audio only)</option>';
+    for (const t of state.tracks) {
+      const opt = document.createElement('option');
+      opt.value = t.file;
+      opt.textContent = (t.title || t.file) + ' (' + (t.duration || 'song') + ')';
+      sel.appendChild(opt);
+    }
+    sel.value = curr;
+  }
+  if (selCombine) {
+    const currC = selCombine.value;
+    selCombine.innerHTML = '<option value="">No background music</option>';
+    for (const t of state.tracks) {
+      const opt = document.createElement('option');
+      opt.value = t.file;
+      opt.textContent = (t.title || t.file) + ' (' + (t.duration || 'song') + ')';
+      selCombine.appendChild(opt);
+    }
+    selCombine.value = currC;
+  }
+}
+
+// File browse & upload for offline videos
+$('shorts-browse-btn').onclick = () => $('shorts-file-input').click();
+
+$('shorts-file-input').onchange = async e => {
+  const files = e.target.files;
+  if (!files || !files.length) return;
+  await uploadMultipleOfflineVideos(files);
+};
+
+// Drag and drop for shorts dropzone
+const sDrop = $('shorts-dropzone');
+sDrop.ondragover = e => { e.preventDefault(); sDrop.classList.add('dragover'); };
+sDrop.ondragleave = () => sDrop.classList.remove('dragover');
+sDrop.ondrop = async e => {
+  e.preventDefault();
+  sDrop.classList.remove('dragover');
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (!files || !files.length) return;
+  await uploadMultipleOfflineVideos(files);
+};
+
+async function uploadMultipleOfflineVideos(files) {
+  if (!files || !files.length) return;
+  if (files.length === 1) {
+    await uploadOfflineVideo(files[0]);
+    return;
+  }
+  const paths = [];
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    showError(`Loading clip ${i + 1}/${files.length}: ${f.name}...`);
+    try {
+      const checkRes = await fetch('/api/shorts/check-upload?name=' + encodeURIComponent(f.name) + '&size=' + (f.size || 0));
+      const checkData = await checkRes.json();
+      if (checkData.exists && checkData.path) {
+        paths.push(checkData.path);
+        continue;
+      }
+      const res = await fetch('/api/shorts/upload?name=' + encodeURIComponent(f.name), {
+        method: 'POST',
+        body: f,
+      });
+      const data = await res.json();
+      if (data.path) paths.push(data.path);
+    } catch (e) {
+      console.warn('Failed upload for', f.name, e);
+    }
+  }
+  $('shorts-source').value = paths.join(', ');
+  showError(`Staged ${paths.length} clips! Ready to process or combine into 1 short.`);
+}
+
+async function uploadOfflineVideo(file) {
+  // If file object provides an absolute system path, use it directly in-place!
+  if (file.path && typeof file.path === 'string') {
+    $('shorts-source').value = file.path;
+    showError('Using local file directly: ' + file.name + ' (zero upload time)');
+    return;
+  }
+
+  // Fast check: if a copy already exists in uploads folder, use the existing one!
+  $('shorts-source').value = 'Checking for existing local copy: ' + file.name + '...';
+  try {
+    const checkRes = await fetch('/api/shorts/check-upload?name=' + encodeURIComponent(file.name) + '&size=' + (file.size || 0));
+    const checkData = await checkRes.json();
+    if (checkData.exists && checkData.path) {
+      $('shorts-source').value = checkData.path;
+      showError('Found existing copy in uploads: ' + file.name + ' (reused instantly)');
+      return;
+    }
+  } catch (e) {}
+
+  $('shorts-source').value = 'Loading ' + file.name + '...';
+  try {
+    const res = await fetch('/api/shorts/upload?name=' + encodeURIComponent(file.name), {
+      method: 'POST',
+      body: file,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    $('shorts-source').value = data.path;
+    showError((data.reused ? 'Reusing existing copy: ' : 'Video loaded: ') + file.name);
+  } catch (err) {
+    $('shorts-source').value = '';
+    showError('Failed to load video: ' + err.message);
+  }
+}
+
+// Edit mode switch handler
+if ($('shorts-edit-mode')) {
+  $('shorts-edit-mode').onchange = () => {
+    const isPro = $('shorts-edit-mode').value === 'pro_autoedit';
+    if ($('field-target-duration')) $('field-target-duration').style.display = isPro ? 'flex' : 'none';
+    if ($('field-num-clips')) $('field-num-clips').style.display = isPro ? 'none' : 'flex';
+  };
+}
+
+// Generate Shorts handler
+async function triggerShortsGeneration(overrideFocus = null) {
+  const source = $('shorts-source').value.trim();
+  if (!source) {
+    showError('Please select an offline video file or enter a video URL / file path.');
+    return;
+  }
+  if (overrideFocus && $('shorts-clip-focus')) {
+    $('shorts-clip-focus').value = overrideFocus;
+  }
+  const mode = $('shorts-edit-mode') ? $('shorts-edit-mode').value : 'pro_autoedit';
+  const target_duration = $('shorts-target-duration') ? parseFloat($('shorts-target-duration').value) : 24;
+  const num_clips = $('shorts-num-clips') ? parseInt($('shorts-num-clips').value, 10) : 3;
+  const aspect_ratio = $('shorts-ratio') ? $('shorts-ratio').value : '9:16';
+  const layout = $('shorts-layout') ? $('shorts-layout').value : 'single';
+  const clip_focus = $('shorts-clip-focus') ? $('shorts-clip-focus').value : 'top_hooks';
+  const keyword = $('shorts-keyword') ? $('shorts-keyword').value.trim() : '';
+  const rawCaptions = $('shorts-captions') ? $('shorts-captions').value : 'hormozi';
+  const captions = rawCaptions !== 'none';
+  const caption_style = rawCaptions === 'clean' ? 'clean' : 'hormozi';
+  const custom_text = $('shorts-custom-text') ? $('shorts-custom-text').value.trim() : '';
+  const custom_text_pos = $('shorts-custom-text-pos') ? $('shorts-custom-text-pos').value : 'top';
+  const sticker_badge = $('shorts-sticker-badge') ? $('shorts-sticker-badge').value : '';
+  const progress_bar = $('shorts-progress-bar') ? $('shorts-progress-bar').value : 'none';
+  const color_grade = $('shorts-color-grade') ? $('shorts-color-grade').value : 'enhanced';
+  const combine = $('shorts-combine-mode') ? $('shorts-combine-mode').value === 'combine' : false;
+  const provider = $('shorts-provider') ? $('shorts-provider').value : 'offline';
+  const bg_music_id = $('shorts-bg-music') ? ($('shorts-bg-music').value || null) : null;
+
+  const btn = $('shorts-generate-btn');
+  const label = $('shorts-generate-label');
+  btn.disabled = true;
+  label.innerHTML = '<span class="spinner"></span> Processing...';
+
+  $('shorts-progress-row').style.display = 'block';
+  $('shorts-bar').style.width = '5%';
+  $('shorts-stage').textContent = 'Starting pipeline...';
+  $('shorts-pct').textContent = '5%';
+  $('shorts-log').textContent = mode === 'pro_autoedit' ? 'Transcribing with word precision and cutting dead air...' : 'Analyzing video and speech audio...';
+  updateShortsStepper(0.05);
+
+  try {
+    const res = await api('/api/shorts/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        source,
+        mode,
+        target_duration,
+        num_clips,
+        aspect_ratio,
+        layout,
+        clip_focus,
+        keyword,
+        captions,
+        caption_style,
+        custom_text,
+        custom_text_pos,
+        sticker_badge,
+        progress_bar,
+        color_grade,
+        provider,
+        bg_music_id,
+        combine,
+      }),
+    });
+    startShortsPolling();
+  } catch (err) {
+    btn.disabled = false;
+    label.textContent = 'Generate Shorts';
+    $('shorts-progress-row').style.display = 'none';
+    showError(err.message);
+  }
+}
+
+$('shorts-generate-btn').onclick = () => triggerShortsGeneration();
+
+if ($('shorts-reroll-btn')) {
+  $('shorts-reroll-btn').onclick = () => {
+    const curr = $('shorts-clip-focus') ? $('shorts-clip-focus').value : 'top_hooks';
+    const next = curr === 'alternative' ? 'diverse' : 'alternative';
+    showError('Re-rolling for different clips from the video...');
+    triggerShortsGeneration(next);
+  };
+}
+
+function updateShortsStepper(pct) {
+  const steps = [$('s-step-1'), $('s-step-2'), $('s-step-3'), $('s-step-4'), $('s-step-5')];
+  if (!steps[0]) return;
+  const activeIdx = pct < 0.2 ? 0 : pct < 0.45 ? 1 : pct < 0.65 ? 2 : pct < 0.9 ? 3 : 4;
+  steps.forEach((el, idx) => {
+    if (!el) return;
+    if (idx < activeIdx) el.className = 'step-pill done';
+    else if (idx === activeIdx) el.className = 'step-pill active';
+    else el.className = 'step-pill';
+  });
+}
+
+function startShortsPolling() {
+  if (shortsState.polling) return;
+  shortsState.polling = true;
+  clearInterval(shortsState.pollTimer);
+  shortsState.pollTimer = setInterval(async () => {
+    try {
+      const snap = await api('/api/shorts/progress');
+      if (snap.status === 'running') {
+        $('shorts-progress-row').style.display = 'block';
+        const pctNum = Math.max(5, Math.round((snap.pct || 0) * 100));
+        $('shorts-bar').style.width = pctNum + '%';
+        $('shorts-stage').textContent = snap.stage || 'Processing...';
+        $('shorts-pct').textContent = pctNum + '%';
+        $('shorts-log').textContent = snap.log || '';
+        updateShortsStepper(snap.pct || 0);
+      } else if (snap.status === 'done') {
+        stopShortsPolling();
+        $('shorts-bar').style.width = '100%';
+        $('shorts-stage').textContent = 'Completed!';
+        $('shorts-pct').textContent = '100%';
+        $('shorts-log').textContent = 'Shorts created successfully!';
+        const steps = [$('s-step-1'), $('s-step-2'), $('s-step-3'), $('s-step-4'), $('s-step-5')];
+        steps.forEach(s => { if (s) s.className = 'step-pill done'; });
+        setTimeout(() => { $('shorts-progress-row').style.display = 'none'; }, 4000);
+        await refreshShortsLibrary();
+        if (snap.shorts && snap.shorts.length) {
+          loadShort(snap.shorts[0]);
+        }
+      } else if (snap.status === 'error') {
+        stopShortsPolling();
+        $('shorts-progress-row').style.display = 'none';
+        showError(snap.error || 'Shorts generation failed');
+      }
+    } catch (e) {
+      // Ignore transient poll error
+    }
+  }, 1000);
+}
+
+function stopShortsPolling() {
+  shortsState.polling = false;
+  clearInterval(shortsState.pollTimer);
+  $('shorts-generate-btn').disabled = false;
+  $('shorts-generate-label').textContent = 'Generate Shorts';
+}
+
+async function refreshShortsLibrary() {
+  try {
+    const data = await api('/api/shorts/library');
+    shortsState.shorts = data.shorts || [];
+    renderShortsLibrary();
+  } catch (e) {}
+}
+
+function renderShortsLibrary() {
+  const grid = $('shorts-library-grid');
+  grid.innerHTML = '';
+  if (!shortsState.shorts.length) {
+    $('shorts-library-hint').style.display = 'block';
+    return;
+  }
+  $('shorts-library-hint').style.display = 'none';
+
+  for (const item of shortsState.shorts) {
+    const isSelected = shortsState.selectedForCombine.includes(item.id);
+    const orderIdx = shortsState.selectedForCombine.indexOf(item.id);
+
+    const card = document.createElement('div');
+    card.className = 'short-card' + (isSelected ? ' selected' : '');
+    card.onclick = () => {
+      if (shortsState.multiSelectMode) {
+        toggleCombineClip(item.id);
+      } else {
+        loadShort(item);
+      }
+    };
+
+    const thumbBox = document.createElement('div');
+    thumbBox.className = 'short-thumb';
+    if (item.thumbnail) {
+      const img = document.createElement('img');
+      img.src = '/api/shorts/thumb/' + encodeURIComponent(item.thumbnail);
+      thumbBox.appendChild(img);
+    } else {
+      thumbBox.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:var(--muted);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    }
+
+    // Checkbox toggle button on thumb
+    const checkBtn = document.createElement('div');
+    checkBtn.className = 'short-card-check';
+    checkBtn.title = isSelected ? 'Remove from Montage' : 'Add to Montage';
+    checkBtn.innerHTML = isSelected
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+    checkBtn.onclick = (e) => {
+      e.stopPropagation();
+      toggleCombineClip(item.id);
+    };
+    thumbBox.appendChild(checkBtn);
+
+    if (isSelected) {
+      const badge = document.createElement('div');
+      badge.className = 'short-card-order-badge';
+      badge.textContent = '#' + (orderIdx + 1);
+      thumbBox.appendChild(badge);
+    }
+
+    const info = document.createElement('div');
+    info.className = 'short-card-info';
+    info.innerHTML = `
+      <div class="short-card-title">${item.title || 'Short Clip'}</div>
+      <div class="short-card-meta">
+        <span class="score-badge" style="font-size:10px;height:18px;padding:0 6px;">${item.clip_count ? item.clip_count + ' clips' : (item.score || 85) + ' Score'}</span>
+        <span class="mono">${item.duration ? item.duration + 's' : ''}</span>
+      </div>
+    `;
+
+    card.appendChild(thumbBox);
+    card.appendChild(info);
+    grid.appendChild(card);
+  }
+}
+
+function updateCombineBar() {
+  const selected = shortsState.selectedForCombine;
+  const bar = $('combine-bar');
+  const countEl = $('combine-count');
+  const numEl = $('combine-clips-num');
+  const hintEl = $('combine-duration-hint');
+  const listEl = $('combine-clips-list');
+
+  if (countEl) countEl.textContent = selected.length;
+  if (numEl) numEl.textContent = selected.length;
+
+  if (selected.length === 0) {
+    if (bar) bar.style.display = 'none';
+    return;
+  }
+
+  if (bar) bar.style.display = 'block';
+
+  let totalDur = 0;
+  for (const id of selected) {
+    const item = shortsState.shorts.find(s => s.id === id);
+    if (item && item.duration) totalDur += parseFloat(item.duration);
+  }
+  if (hintEl) hintEl.textContent = `Total duration: ~${totalDur.toFixed(1)}s · ${selected.length} clips will be concatenated in order`;
+
+  if (listEl) {
+    listEl.innerHTML = '';
+    selected.forEach((id, idx) => {
+      const item = shortsState.shorts.find(s => s.id === id) || { title: id, duration: '' };
+      const chip = document.createElement('div');
+      chip.className = 'combine-chip';
+      const cleanTitle = (item.title || 'Clip').replace(/["'<>]/g, '').slice(0, 24);
+      chip.innerHTML = `
+        <span class="chip-order">${idx + 1}.</span>
+        <span>${cleanTitle} (${item.duration || 0}s)</span>
+        ${idx > 0 ? `<button type="button" title="Move left" onclick="event.stopPropagation(); moveCombineItem(${idx}, -1)">◀</button>` : ''}
+        ${idx < selected.length - 1 ? `<button type="button" title="Move right" onclick="event.stopPropagation(); moveCombineItem(${idx}, 1)">▶</button>` : ''}
+        <button type="button" title="Remove clip" onclick="event.stopPropagation(); toggleCombineClip('${id}')">✕</button>
+      `;
+      listEl.appendChild(chip);
+    });
+  }
+}
+
+window.moveCombineItem = function(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= shortsState.selectedForCombine.length) return;
+  const item = shortsState.selectedForCombine.splice(index, 1)[0];
+  shortsState.selectedForCombine.splice(newIndex, 0, item);
+  updateCombineBar();
+  renderShortsLibrary();
+};
+
+window.toggleCombineClip = function(id) {
+  const idx = shortsState.selectedForCombine.indexOf(id);
+  if (idx >= 0) {
+    shortsState.selectedForCombine.splice(idx, 1);
+  } else {
+    shortsState.selectedForCombine.push(id);
+  }
+  updateCombineBar();
+  renderShortsLibrary();
+};
+
+if ($('btn-do-combine')) {
+  $('btn-do-combine').onclick = async () => {
+    const selected = shortsState.selectedForCombine;
+    if (!selected || selected.length < 2) {
+      showError('Please select at least 2 clips to combine into 1 short.');
+      return;
+    }
+    const btn = $('btn-do-combine');
+    const lbl = $('btn-do-combine-label');
+    const title = $('combine-title') ? $('combine-title').value.trim() : '';
+    const bg_music_file = $('combine-bg-music') ? $('combine-bg-music').value : '';
+
+    btn.disabled = true;
+    lbl.innerHTML = '<span class="spinner"></span> Merging...';
+    showError(`Merging ${selected.length} clips into 1 vertical short...`);
+
+    try {
+      const res = await api('/api/shorts/combine', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          clip_ids: selected,
+          title: title || `Montage: ${selected.length} Clips`,
+          bg_music_file: bg_music_file || null,
+        }),
+      });
+      showError(`Success! Merged ${selected.length} clips into 1 short.`);
+      shortsState.selectedForCombine = [];
+      updateCombineBar();
+      await refreshShortsLibrary();
+      if (res.short) loadShort(res.short);
+    } catch (err) {
+      showError('Failed to combine clips: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      lbl.textContent = 'Merge into 1 Short';
+    }
+  };
+}
+
+if ($('btn-clear-combine')) {
+  $('btn-clear-combine').onclick = () => {
+    shortsState.selectedForCombine = [];
+    updateCombineBar();
+    renderShortsLibrary();
+  };
+}
+
+if ($('btn-toggle-multi-select')) {
+  $('btn-toggle-multi-select').onclick = () => {
+    shortsState.multiSelectMode = !shortsState.multiSelectMode;
+    const btn = $('btn-toggle-multi-select');
+    const lbl = $('combine-toggle-label');
+    if (shortsState.multiSelectMode) {
+      btn.classList.add('active');
+      lbl.textContent = 'Exit Selection';
+      showError('Multi-select mode active: click clips to add or remove them from the montage.');
+    } else {
+      btn.classList.remove('active');
+      lbl.textContent = 'Select Clips to Combine';
+    }
+    renderShortsLibrary();
+  };
+}
+
+function loadShort(item) {
+  shortsState.current = item;
+  $('shorts-player-card').style.display = 'block';
+  const video = $('shorts-video');
+  video.src = '/api/shorts/video/' + encodeURIComponent(item.filename);
+  video.load();
+
+  video.ontimeupdate = () => {
+    const cur = fmt(video.currentTime);
+    const dur = fmt(video.duration || 0);
+    if ($('video-overlay-time')) $('video-overlay-time').textContent = cur + ' / ' + dur;
+  };
+
+  document.querySelectorAll('.speed-pill').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.speed-pill').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      video.playbackRate = parseFloat(b.dataset.speed);
+    };
+  });
+
+  $('shorts-view-title').textContent = item.title || 'Short Clip';
+  $('shorts-view-score').textContent = (item.score || 85) + ' Viral Score';
+  $('shorts-view-duration').textContent = (item.duration || 0) + 's';
+  $('shorts-view-hook').textContent = item.hook_sentence ? '"' + item.hook_sentence + '"' : 'Hook moment';
+  $('shorts-view-reason').textContent = item.virality_reason || 'Self-contained engaging highlight.';
+
+  const dl = $('shorts-download-link');
+  dl.href = '/api/shorts/video/' + encodeURIComponent(item.filename);
+  dl.download = item.filename;
+
+  // Render Edit Decision List (EDL) if available
+  const edlBox = $('shorts-edl-box');
+  const edlList = $('shorts-edl-list');
+  const edlCount = $('shorts-edl-count');
+  if (item.edl && item.edl.length) {
+    if (edlBox) edlBox.style.display = 'block';
+    if (edlCount) edlCount.textContent = `${item.edl.length} Cuts · Alternating 115% Zoom`;
+    if (edlList) {
+      edlList.innerHTML = item.edl.map(c => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:5px 8px; background:var(--card); border:1px solid var(--line); border-radius:4px; gap:8px;">
+          <span style="font-weight:700; color:var(--accent); min-width:85px;">#${c.clip} [${c.output_in}s-${c.output_out}s]</span>
+          <span class="score-badge" style="font-size:10px; height:18px; padding:0 6px; white-space:nowrap;">${c.zoom}</span>
+          <span style="color:var(--fg); flex:1; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${c.text}"</span>
+        </div>
+      `).join('');
+    }
+  } else if (edlBox) {
+    edlBox.style.display = 'none';
+  }
+
+  // Initialize Clip Trimmer inputs
+  const startVal = item.start_time !== undefined ? item.start_time : 0;
+  const endVal = item.end_time !== undefined ? item.end_time : Math.round(item.duration || 30);
+  $('trim-start').value = startVal;
+  $('trim-end').value = endVal;
+
+  $('trim-start-minus').onclick = () => {
+    const v = Math.max(0, parseFloat($('trim-start').value || 0) - 1);
+    $('trim-start').value = v.toFixed(1);
+  };
+  $('trim-start-plus').onclick = () => {
+    const v = parseFloat($('trim-start').value || 0) + 1;
+    $('trim-start').value = v.toFixed(1);
+  };
+  $('trim-end-minus').onclick = () => {
+    const v = Math.max(0, parseFloat($('trim-end').value || 0) - 1);
+    $('trim-end').value = v.toFixed(1);
+  };
+  $('trim-end-plus').onclick = () => {
+    const v = parseFloat($('trim-end').value || 0) + 1;
+    $('trim-end').value = v.toFixed(1);
+  };
+
+  // Re-cut short action
+  $('btn-recut-short').onclick = async () => {
+    const s = parseFloat($('trim-start').value);
+    const e = parseFloat($('trim-end').value);
+    if (isNaN(s) || isNaN(e) || e <= s) {
+      showError('End time must be greater than start time.');
+      return;
+    }
+    const btn = $('btn-recut-short');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Re-cutting...';
+    showError('Trimming and re-rendering clip frame-accurately...');
+    try {
+      const rawCaptions = $('trim-captions') ? $('trim-captions').value : ($('shorts-captions') ? $('shorts-captions').value : 'hormozi');
+      const captions = rawCaptions !== 'none';
+      const caption_style = rawCaptions === 'clean' ? 'clean' : 'hormozi';
+      const custom_text = $('trim-custom-text') && $('trim-custom-text').value.trim() ? $('trim-custom-text').value.trim() : ($('shorts-custom-text') ? $('shorts-custom-text').value.trim() : '');
+      const custom_text_pos = $('shorts-custom-text-pos') ? $('shorts-custom-text-pos').value : 'top';
+      const sticker_badge = $('shorts-sticker-badge') ? $('shorts-sticker-badge').value : '';
+      const progress_bar = $('shorts-progress-bar') ? $('shorts-progress-bar').value : 'none';
+      const color_grade = $('shorts-color-grade') ? $('shorts-color-grade').value : 'enhanced';
+
+      const res = await api('/api/shorts/recut', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          clip_id: item.id,
+          start_time: s,
+          end_time: e,
+          layout: $('shorts-layout').value || 'single',
+          captions: captions,
+          caption_style: caption_style,
+          custom_text: custom_text,
+          custom_text_pos: custom_text_pos,
+          sticker_badge: sticker_badge,
+          progress_bar: progress_bar,
+          color_grade: color_grade,
+        })
+      });
+      showError('Short re-cut successfully!');
+      if (res.short) {
+        loadShort(res.short);
+        await refreshShortsLibrary();
+      }
+    } catch (err) {
+      showError('Failed to recut short: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Re-cut Clip';
+    }
+  };
+
+  if ($('shorts-reroll-card-btn')) {
+    $('shorts-reroll-card-btn').onclick = () => {
+      if (item.source_file) {
+        $('shorts-source').value = item.source_file;
+      }
+      const curr = $('shorts-clip-focus') ? $('shorts-clip-focus').value : 'top_hooks';
+      const next = curr === 'alternative' ? 'diverse' : 'alternative';
+      showError('Extracting completely different clips from this video...');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      triggerShortsGeneration(next);
+    };
+  }
+
+  // Viral Metadata Modal Action
+  $('shorts-metadata-btn').onclick = () => {
+    $('metadata-modal').style.display = 'flex';
+    const initKw = ($('shorts-keyword') ? $('shorts-keyword').value.trim() : '') || (item.hook_sentence ? item.hook_sentence.split(' ').slice(0, 3).join(' ') : '');
+    $('metadata-modal-content').innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="background:var(--well); border:1px solid var(--line); border-radius:8px; padding:16px;">
+          <div style="font-weight:700; font-size:14px; margin-bottom:4px; color:var(--fg);">Enter Focus Keyword or Topic</div>
+          <div class="subtext" style="font-size:12px; margin-bottom:12px; color:var(--muted);">
+            Provide your target topic or keyword. We will tailor high-CTR titles and generate a video-synced description with accurate timestamps.
+          </div>
+          <div style="display:flex; gap:10px;">
+            <input class="title-input" id="meta-user-keyword" placeholder="e.g. real estate investing, productivity hacks, trading tips..." value="${initKw.replace(/"/g, '&quot;')}" style="flex:1;">
+            <button class="btn btn-primary" id="meta-generate-btn" style="white-space:nowrap;">
+              ✨ Suggest Synced Description
+            </button>
+          </div>
+        </div>
+        <div id="meta-results-container"></div>
+      </div>
+    `;
+
+    const kwInput = $('meta-user-keyword');
+    if (kwInput) {
+      kwInput.focus();
+      kwInput.onkeydown = e => { if (e.key === 'Enter') $('meta-generate-btn').click(); };
+    }
+
+    $('meta-generate-btn').onclick = async () => {
+      const kw = $('meta-user-keyword').value.trim();
+      const container = $('meta-results-container');
+      const btn = $('meta-generate-btn');
+      btn.disabled = true;
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted);"><span class="spinner"></span> Analyzing transcript & generating synced breakdown for "' + (kw || 'clip') + '"...</div>';
+      try {
+        const res = await api('/api/shorts/metadata', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            hook: item.hook_sentence || item.title,
+            transcript: item.virality_reason || item.title,
+            keyword: kw,
+            duration: item.duration || 30.0,
+          })
+        });
+        const m = res.metadata || {};
+        const titlesHtml = (m.titles || []).map((t, idx) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--well); border:1px solid var(--line); border-radius:6px; padding:8px 12px; margin-top:6px; gap:8px;">
+            <span style="font-weight:600; font-size:13px; color:var(--fg); flex:1;">${t}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-icon" onclick="copyText('${t.replace(/'/g, "\\'")}', this)" title="Copy title" style="padding:4px 8px; font-size:11px;">Copy</button>
+              <button class="btn" onclick="syncBannerOverVideo('${t.replace(/'/g, "\\'")}')" title="Sync this title banner over video frames" style="padding:4px 8px; font-size:11px; white-space:nowrap; color:var(--accent);">⚡ Sync Over Video</button>
+            </div>
+          </div>
+        `).join('');
+
+        const timestampsHtml = (m.timestamps || []).map(ts => `
+          <button class="pill" onclick="seekVideo(${ts.time})" style="cursor:pointer; font-size:11px;">
+            ▶ ${ts.label}
+          </button>
+        `).join(' ');
+
+        const tagsHtml = (m.tags || []).map(t => `<span class="pill" style="font-size:11px;">#${t}</span>`).join(' ');
+
+        container.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
+            <div>
+              <div class="eyebrow" style="margin-bottom:6px;">Keyword-Targeted Titles (Click to Sync Over Video)</div>
+              ${titlesHtml}
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="eyebrow">Video-Synced Description (Timestamps & Chapters)</div>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="copyText($('meta-desc-txt').value, this)">Copy Description</button>
+                  <button class="btn" style="padding:2px 8px; font-size:11px; color:var(--accent);" onclick="syncBannerOverVideo('${(m.video_banner || m.keyword || '').replace(/'/g, "\\'")}')">⚡ Sync Hook Over Video</button>
+                </div>
+              </div>
+              <textarea id="meta-desc-txt" readonly style="width:100%; min-height:100px; margin-top:6px; font-size:12px; line-height:1.4; background:var(--well); border:1px solid var(--line); border-radius:6px; padding:8px 10px; color:var(--fg);">${m.description || ''}</textarea>
+              ${timestampsHtml ? `<div style="margin-top:8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span class="field-label" style="margin:0; font-size:11px;">Seek Timeline:</span>${timestampsHtml}</div>` : ''}
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="eyebrow">Engagement Pinned Comment</div>
+                <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="copyText($('meta-pin-txt').value, this)">Copy Comment</button>
+              </div>
+              <textarea id="meta-pin-txt" readonly style="width:100%; min-height:50px; margin-top:6px; font-size:12px; line-height:1.4; background:var(--well); border:1px solid var(--line); border-radius:6px; padding:8px 10px; color:var(--fg);">${m.pinned_comment || ''}</textarea>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div class="eyebrow">Search Tags</div>
+                <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="copyText('${(m.tags || []).join(', ')}', this)">Copy All Tags</button>
+              </div>
+              <div class="pills">${tagsHtml}</div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="color:#f87171; padding:20px;">Failed to generate metadata: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  };
+
+  $('shorts-mix-action-btn').onclick = async () => {
+    if (!state.tracks.length) {
+      showError('Generate an AI song in the Music Studio first to mix as background music!');
+      return;
+    }
+    const songName = prompt('Enter the track filename to mix, or cancel to use the latest track (' + state.tracks[0].file + '):', state.tracks[0].file);
+    if (!songName) return;
+    showError('Mixing background music into short with audio ducking...');
+    try {
+      const res = await api('/api/shorts/mix-music', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ clip_filename: item.filename, music_file: songName }),
+      });
+      showError('Mixed short saved as: ' + res.filename);
+      item.filename = res.filename;
+      loadShort(item);
+      refreshShortsLibrary();
+    } catch (e) {
+      showError(e.message);
+    }
+  };
+}
+
+// Copy helper with visual feedback
+function copyText(str, btn) {
+  navigator.clipboard.writeText(str).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  });
+}
+
+window.seekVideo = function(seconds) {
+  const v = $('shorts-video');
+  if (v) {
+    v.currentTime = seconds;
+    v.play().catch(() => {});
+  }
+};
+
+window.syncBannerOverVideo = async function(text) {
+  if (!text || !shortsState.current) return;
+  const item = shortsState.current;
+  showError(`Syncing "${text}" over video as title banner...`);
+  try {
+    const res = await api('/api/shorts/recut', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        clip_id: item.id,
+        start_time: item.start_time !== undefined ? item.start_time : 0,
+        end_time: item.end_time !== undefined ? item.end_time : (item.duration || 30),
+        layout: $('shorts-layout') ? $('shorts-layout').value : 'single',
+        captions: true,
+        caption_style: 'hormozi',
+        custom_text: text,
+        custom_text_pos: 'top',
+      })
+    });
+    showError('Banner synchronized over video successfully!');
+    if (res.short) {
+      loadShort(res.short);
+      await refreshShortsLibrary();
+    }
+  } catch (err) {
+    showError('Failed to sync banner over video: ' + err.message);
+  }
+};
+
+// Close Metadata Modal handlers
+$('close-metadata-modal').onclick = () => $('metadata-modal').style.display = 'none';
+$('metadata-modal').onclick = e => { if (e.target === $('metadata-modal')) $('metadata-modal').style.display = 'none'; };
+
+// Neural Voiceover Generator
+$('vo-generate-btn').onclick = async () => {
+  const text = $('vo-text').value.trim();
+  if (!text) {
+    showError('Please type or paste a script for the voiceover.');
+    return;
+  }
+  const voice = $('vo-voice').value || 'en-US-ChristopherNeural';
+  const btn = $('vo-generate-btn');
+  const lbl = $('vo-generate-label');
+  btn.disabled = true;
+  lbl.innerHTML = '<span class="spinner"></span> Synthesizing Neural Voice...';
+  showError('Synthesizing neural speech with Edge Neural AI...');
+
+  try {
+    const res = await api('/api/voiceover', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text, voice })
+    });
+    showError('Voiceover generated: ' + res.file);
+    $('vo-player-card').style.display = 'block';
+    const audio = $('vo-audio');
+    audio.src = '/media/' + encodeURIComponent(res.file);
+    audio.load();
+    $('vo-file-name').textContent = res.file;
+    $('vo-download-link').href = audio.src;
+    $('vo-download-link').download = res.file;
+    $('vo-use-shorts-btn').onclick = () => {
+      switchStudio('shorts');
+      const select = $('shorts-music-select');
+      if (select) {
+        select.value = res.file;
+      }
+      showError('Voiceover selected as audio for Shorts Studio: ' + res.file);
+    };
+    // Add to music tracks list so it can be selected as background speech/audio
+    state.tracks.unshift({ file: res.file, title: 'Voiceover: ' + text.slice(0, 24) + '...', duration: 'voice' });
+    populateMusicForShorts();
+  } catch (err) {
+    showError('Voiceover synthesis failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    lbl.textContent = 'Synthesize Voiceover';
+  }
+};
 
 init().then(fitCanvas);
 </script>

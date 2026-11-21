@@ -27,6 +27,12 @@ dev = [
   "ruff>=0.4",
   "shellcheck-py>=0.10",
 ]
+shorts = [
+  "faster-whisper>=1.0.0",
+  "edge-tts>=6.1.0",
+  "opencv-python>=4.8.0",
+  "yt-dlp>=2024.0.0",
+]
 # Deferred to Theme 3 (Session 3+); documented here as the contract.
 ranking = [
   "librosa>=0.10",
@@ -58,3 +64,55 @@ ignore = [
 testpaths = ["tests"]
 pythonpath = ["skills/claude-music/scripts"]
 addopts = "-v --tb=short"
+
+[tool.pyrefly]
+preset = "off"
+project-includes = ["."]
+project-excludes = [
+  "skills/**",
+  "tests/**"
+]
+search-path = [
+  ".",
+  "skills/claude-music",
+  "skills/claude-music/scripts",
+  "skills/claude-music/webapp",
+]
+ignore-missing-imports = [
+  "acestep",
+  "acestep.*",
+  "cv2",
+  "cv2.*",
+  "edge_tts",
+  "edge_tts.*",
+  "faster_whisper",
+  "faster_whisper.*",
+  "google",
+  "google.*",
+  "google.genai",
+  "google.genai.*",
+  "reel_autoedit",
+  "shorts_engine",
+  "torch",
+  "torch.*",
+  "vllm",
+  "vllm.*",
+  "yt_dlp",
+  "yt_dlp.*",
+]
+
+[tool.pyrefly.errors]
+missing-import = "ignore"
+all = "ignore"
+
+[tool.pyright]
+include = ["skills", "tests"]
+extraPaths = [
+  ".",
+  "skills/claude-music",
+  "skills/claude-music/scripts",
+  "skills/claude-music/webapp",
+]
+reportMissingImports = false
+reportMissingModuleSource = false
+

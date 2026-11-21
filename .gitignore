@@ -16,9 +16,20 @@ dist/
 build/
 .venv/
 venv/
+.vscode/
+pyrefly.toml
+pyrightconfig.json
 
 # Per-machine config (created by install.sh from config.example.json)
 skills/claude-music/config.json
 
 # Local session notes
 HANDOVER.md
+
+# Generated outputs & media files
+output/
+*.ass
+filter.txt
+frame_*.jpg
+scratch_eval/
+

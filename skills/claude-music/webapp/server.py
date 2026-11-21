@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+# pyrefly: ignore-all[missing-import]
 #!/usr/bin/env python3
 """claude-music web dashboard server.
 
@@ -15,10 +17,13 @@ argument lists (never a shell).
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import contextlib
+import gc
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -27,12 +32,37 @@ from collections import deque
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 WEBAPP_DIR = Path(__file__).resolve().parent
 SKILL_DIR = WEBAPP_DIR.parent
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 CONFIG_PATH = SKILL_DIR / "config.json"
+if str(SKILL_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILL_DIR))
+
+try:
+    from shorts_engine import (  # type: ignore[missing-import]
+        JobCancelledError,
+        ShortsEngine,
+        synthesize_voiceover_sync,
+    )
+except ImportError:
+    ShortsEngine = None
+    JobCancelledError = Exception
+    synthesize_voiceover_sync = None
+
+
+def purge_system_memory():
+    """Force garbage collection and release GPU cache without importing heavy packages."""
+    gc.collect()
+    if "torch" in sys.modules:
+        try:
+            torch = sys.modules["torch"]
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
 
 AUDIO_EXTS = {".flac", ".wav", ".mp3", ".opus", ".aac", ".m4a", ".ogg"}
 CAPTION_MAX = 512
@@ -47,10 +77,53 @@ FILENAME_RE = re.compile(
 )
 
 
+def get_ffmpeg_bin() -> str:
+    """Resolve FFmpeg binary reliably."""
+    found = shutil.which("ffmpeg")
+    if found:
+        return found
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        winget = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe"
+        if winget.exists():
+            return str(winget)
+    return "ffmpeg"
+
+
+def get_ffprobe_bin() -> str:
+    """Resolve FFprobe binary reliably."""
+    found = shutil.which("ffprobe")
+    if found:
+        return found
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        winget = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffprobe.exe"
+        if winget.exists():
+            return str(winget)
+    return "ffprobe"
+
+
+def get_uv_bin() -> str:
+    """Resolve uv binary reliably across platforms."""
+    found = shutil.which("uv")
+    if found:
+        return found
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    winget_uv = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "uv.exe" if local_app_data else None
+    for cand in [
+        Path(os.path.expanduser("~/.cargo/bin/uv.exe")),
+        Path(os.path.expanduser("~/.cargo/bin/uv")),
+        winget_uv,
+    ]:
+        if cand and cand.exists():
+            return str(cand)
+    return "uv"
+
+
 def load_config():
     """Read the skill's config.json. Returns {} when missing/broken."""
     try:
-        with CONFIG_PATH.open() as f:
+        with CONFIG_PATH.open(encoding="utf-8-sig") as f:
             cfg = json.load(f)
         return cfg if isinstance(cfg, dict) else {}
     except Exception:
@@ -78,7 +151,12 @@ def save_output_dir(raw):
         expanded.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         return None, f"Cannot create that folder: {e}"
-    if not os.access(expanded, os.W_OK):
+
+    test_file = expanded / f".write_test_{int(time.time())}.tmp"
+    try:
+        test_file.write_text("ok", encoding="utf-8")
+        test_file.unlink(missing_ok=True)
+    except Exception:
         return None, "That folder is not writable"
     cfg = load_config()
     cfg["output_dir"] = raw
@@ -163,9 +241,10 @@ def safe_upload_dest(output_dir, raw_name):
 
 def ffprobe_info(path):
     """Container/stream info via ffprobe, or None when undecodable."""
+    ffprobe_bin = get_ffprobe_bin()
     try:
         out = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-print_format", "json",
+            [ffprobe_bin, "-v", "quiet", "-print_format", "json",
              "-show_format", "-show_streams", str(path)],
             capture_output=True, text=True, timeout=30)
         info = json.loads(out.stdout)
@@ -190,9 +269,10 @@ def parse_loudnorm_json(text):
 
 def measure_loudness(path):
     """One loudnorm analysis pass. Returns the measured dict or None."""
+    ffmpeg_bin = get_ffmpeg_bin()
     try:
         out = subprocess.run(
-            ["ffmpeg", "-hide_banner", "-nostdin", "-i", str(path),
+            [ffmpeg_bin, "-hide_banner", "-nostdin", "-i", str(path),
              "-af", "loudnorm=I=-14:TP=-1:LRA=11:print_format=json",
              "-f", "null", "-"],
             capture_output=True, text=True, timeout=300)
@@ -271,7 +351,10 @@ def build_audit(probe, loudnorm):
     return report
 
 
-MIN_GENERATION_VRAM_MB = 4000
+# Minimum free VRAM required before generation starts. Set to 3000 MB (3 GB)
+# so 4 GB cards (which typically have ~3.5-3.7 GB free after display/OS usage)
+# can generate with CPU offloading enabled.
+MIN_GENERATION_VRAM_MB = 3000
 
 
 def gpu_hog_processes(limit=4):
@@ -286,11 +369,19 @@ def gpu_hog_processes(limit=4):
             pid_s, mem_s = [p.strip() for p in line.split(",")]
             name = pid_s
             try:
-                args = Path(f"/proc/{pid_s}/cmdline").read_bytes() \
-                    .decode(errors="replace").split("\0")
-                name = next((Path(a).name for a in args
-                             if a.endswith(".py")), None) \
-                    or Path(args[0]).name or pid_s
+                if sys.platform == "win32":
+                    task_out = subprocess.run(
+                        ["tasklist", "/FI", f"PID eq {pid_s}", "/FO", "CSV", "/NH"],
+                        capture_output=True, text=True, timeout=3)
+                    task_lines = task_out.stdout.strip().splitlines()
+                    if task_lines and task_lines[0].startswith('"'):
+                        name = task_lines[0].split('","')[0].strip('"')
+                else:
+                    args = Path(f"/proc/{pid_s}/cmdline").read_bytes() \
+                        .decode(errors="replace").split("\0")
+                    name = next((Path(a).name for a in args
+                                 if a.endswith(".py")), None) \
+                        or Path(args[0]).name or pid_s
             except Exception:
                 pass
             rows.append((name, int(mem_s)))
@@ -362,6 +453,9 @@ def suggest_fix(error_msg):
                 "preset or shorter duration; first runs also download models.")
     if "no space left" in msg:
         return "The disk holding the output folder is full."
+    if "tuple index out of range" in msg or "no audio" in msg:
+        return ("The video does not have a detectable audio track, or the container stream could not be decoded. "
+                "The engine has been updated to automatically process silent or video-only files without crashing.")
     return None
 
 
@@ -552,10 +646,34 @@ class JobRunner:
         self.load_cfg = cfg_loader
         self.lock = threading.Lock()
         self._state_lock = threading.Lock()
+        self.proc = None
         self.state = {"status": "idle", "pct": None, "stage": None,
                       "started_at": None, "result": None, "error": None,
                       "suggestion": None, "request": None}
         self.last_generation_sec = 30.0
+
+    def cancel(self):
+        """Immediately terminate running generation subprocess and purge all memory."""
+        with self._state_lock:
+            proc = self.proc
+            self.proc = None
+            self.state = {
+                "status": "idle", "pct": None, "stage": None,
+                "started_at": None, "result": None, "error": None,
+                "suggestion": None, "request": None
+            }
+        if proc:
+            try:
+                if sys.platform == "win32":
+                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                                   capture_output=True, timeout=5)
+                else:
+                    proc.kill()
+            except Exception:
+                with contextlib.suppress(Exception):
+                    proc.kill()
+        purge_system_memory()
+        return True
 
     def snapshot(self):
         with self._state_lock:
@@ -591,7 +709,9 @@ class JobRunner:
         fmt = defaults.get("format") or "flac"
         out_dir = str(resolve_output_dir(cfg))
         engine = str(SCRIPTS_DIR / "music_engine.py")
-        cmd = ["uv", "run", "python3", engine,
+        uv_bin = get_uv_bin()
+        py = "python" if sys.platform == "win32" else "python3"
+        cmd = [uv_bin, "run", py, engine,
                "--ace-step-dir", os.path.expanduser(cfg["ace_step_dir"]),
                "--progress",
                "--quality", quality,
@@ -641,6 +761,7 @@ class JobRunner:
             cmd, cwd=os.path.expanduser(cfg["ace_step_dir"]),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, env=env)
+        self.proc = proc
 
         stderr_tail = deque(maxlen=40)
 
@@ -657,10 +778,9 @@ class JobRunner:
                     self._set(stage=stage,
                               status="generating" if stage == "generating"
                               else "loading")
-                elif ev["event"] == "progress":
-                    if ev.get("pct") is not None:
-                        self._set(status="generating", pct=ev["pct"],
-                                  stage=ev.get("stage") or None)
+                elif ev["event"] == "progress" and ev.get("pct") is not None:
+                    self._set(status="generating", pct=ev["pct"],
+                              stage=ev.get("stage") or None)
 
         t_err = threading.Thread(target=read_stderr, daemon=True)
         t_err.start()
@@ -670,6 +790,8 @@ class JobRunner:
             proc.kill()
             proc.communicate()
             return None, "Generation timed out", suggest_fix("timed out")
+        finally:
+            self.proc = None
         t_err.join(timeout=5)
 
         result = parse_engine_stdout(stdout)
@@ -833,11 +955,255 @@ def validate_generate_request(body):
     return req, None
 
 
+class ShortsRunner:
+    """Manages background AI YouTube and offline video shorts generation."""
+    def __init__(self, cfg_fn):
+        self.cfg_fn = cfg_fn
+        self.lock = threading.Lock()
+        self.engine = None
+        self._cancelled = False
+        self.state = {
+            "status": "idle",
+            "stage": "",
+            "pct": 0.0,
+            "log": "",
+            "shorts": [],
+            "error": None,
+            "started_at": 0.0,
+        }
+
+    def snapshot(self):
+        with self.lock:
+            return dict(self.state)
+
+    def _set(self, **kwargs):
+        with self.lock:
+            self.state.update(kwargs)
+
+    def cancel(self):
+        """Immediately terminate active jobs and purge temporary files and memory."""
+        with self.lock:
+            self._cancelled = True
+            if self.engine:
+                with contextlib.suppress(Exception):
+                    self.engine.abort()
+            self.state = {
+                "status": "idle",
+                "stage": "",
+                "pct": 0.0,
+                "log": "Generation cancelled. Memory and temporary files purged.",
+                "shorts": [],
+                "error": None,
+                "started_at": 0.0,
+            }
+        purge_system_memory()
+        return True
+
+    def start(self, req):
+        with self.lock:
+            if self.state["status"] == "running":
+                return "busy"
+            self._cancelled = False
+            self.state = {
+                "status": "running",
+                "stage": "starting",
+                "pct": 0.05,
+                "log": "Starting video shorts pipeline...",
+                "shorts": [],
+                "error": None,
+                "started_at": time.time(),
+            }
+        threading.Thread(target=self._run, args=(req,), daemon=True).start()
+        return None
+
+    def _run(self, req):
+        try:
+            if ShortsEngine is None:
+                raise RuntimeError("ShortsEngine is unavailable. Please check that dependencies are installed.")
+            cfg = self.cfg_fn()
+            out_dir = resolve_output_dir(cfg)
+            engine = ShortsEngine(out_dir)
+            self.engine = engine
+
+            def is_cancelled():
+                return self._cancelled
+
+            def on_progress(log_msg, pct):
+                if is_cancelled():
+                    raise JobCancelledError("Cancelled by user.")
+                self._set(stage="processing", pct=round(pct, 2), log=log_msg)
+
+            combine = bool(req.get("combine", False))
+            raw_source = req.get("source")
+            sources = []
+            if isinstance(raw_source, list):
+                sources = [str(s).strip() for s in raw_source if str(s).strip()]
+            elif isinstance(raw_source, str) and ("," in raw_source or "\n" in raw_source):
+                parts = re.split(r"[,\n]+", raw_source)
+                sources = [p.strip() for p in parts if p.strip()]
+            elif raw_source:
+                sources = [str(raw_source).strip()]
+
+            if not sources:
+                raise RuntimeError("No video source provided (enter local file path or YouTube URL).")
+
+            num_clips = int(req.get("num_clips", 3))
+            aspect_ratio = str(req.get("aspect_ratio", "9:16"))
+            layout = str(req.get("layout", "single"))
+            captions = bool(req.get("captions", True))
+            caption_style = str(req.get("caption_style", "hormozi"))
+            clip_focus = str(req.get("clip_focus", "top_hooks"))
+            keyword = str(req.get("keyword", "")).strip()
+            custom_text = str(req.get("custom_text", "")).strip()
+            custom_text_pos = str(req.get("custom_text_pos", "top")).strip()
+            sticker_badge = str(req.get("sticker_badge", "")).strip()
+            progress_bar = str(req.get("progress_bar", "none")).strip()
+            color_grade = str(req.get("color_grade", "enhanced")).strip()
+            api_key = req.get("api_key") or cfg.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY")
+            provider = str(req.get("provider", "offline"))
+            bg_music_id = req.get("bg_music_id")
+
+            bg_music_path = None
+            if bg_music_id:
+                bg_music_path = safe_audio_path(out_dir, bg_music_id)
+
+            mode = str(req.get("mode", "pro_autoedit" if req.get("pro_autoedit") else "standard"))
+            if mode == "pro_autoedit":
+                target_dur = float(req.get("target_duration", 30))
+                model_size = str(req.get("model_size", "base"))
+                if len(sources) == 1:
+                    on_progress("Loading video...", 0.1)
+                    video_path = engine.prepare_video(sources[0], on_progress=on_progress, is_cancelled=is_cancelled)
+                else:
+                    on_progress(f"Combining {len(sources)} clips into master timeline...", 0.1)
+                    prep_clips = [engine.prepare_video(s, on_progress=on_progress, is_cancelled=is_cancelled) for s in sources]
+                    combined_entry = engine.combine_clips(prep_clips, title="Multi-Clip Raw Master", is_cancelled=is_cancelled)
+                    video_path = engine.shorts_dir / combined_entry["filename"]
+
+                entry = engine.autoedit_reel(
+                    source_path=video_path,
+                    target_duration=target_dur,
+                    music_path=bg_music_path,
+                    model_size=model_size,
+                    caption_style=caption_style,
+                    custom_text=custom_text,
+                    sticker_badge=sticker_badge,
+                    progress_bar=progress_bar,
+                    color_grade=color_grade,
+                    burn_captions=captions,
+                    on_progress=on_progress,
+                    is_cancelled=is_cancelled,
+                )
+                self._set(status="done", pct=1.0, log="Professional auto-edit complete!", shorts=[entry])
+                return
+
+            all_rendered = []
+            if len(sources) == 1:
+                src = sources[0]
+                on_progress("Loading video...", 0.1)
+                video_path = engine.prepare_video(src, on_progress=on_progress, is_cancelled=is_cancelled)
+
+                on_progress("Transcribing speech with Whisper AI...", 0.3)
+                transcript = engine.transcribe(video_path, on_progress=on_progress, is_cancelled=is_cancelled)
+
+                on_progress("Analyzing viral hooks...", 0.5)
+                highlights = engine.get_highlights(
+                    transcript,
+                    num_clips=num_clips,
+                    api_key=api_key,
+                    provider=provider,
+                    clip_focus=clip_focus,
+                    keyword=keyword,
+                    on_progress=on_progress,
+                    is_cancelled=is_cancelled,
+                )
+
+                on_progress("Rendering 9:16 vertical video clips...", 0.65)
+                all_rendered = engine.render_shorts(
+                    video_path,
+                    highlights,
+                    transcript=transcript,
+                    aspect_ratio=aspect_ratio,
+                    layout=layout,
+                    captions=captions,
+                    caption_style=caption_style,
+                    custom_text=custom_text,
+                    custom_text_pos=custom_text_pos,
+                    sticker_badge=sticker_badge,
+                    progress_bar=progress_bar,
+                    color_grade=color_grade,
+                    bg_music_path=bg_music_path,
+                    combine_into_one=combine,
+                    on_progress=on_progress,
+                    is_cancelled=is_cancelled,
+                )
+            else:
+                clips_per_src = max(1, num_clips // len(sources)) if num_clips else 1
+                for s_idx, src in enumerate(sources, 1):
+                    on_progress(f"Processing video {s_idx}/{len(sources)}: {Path(src).name}...", 0.1 + (0.5 * (s_idx - 1) / len(sources)))
+                    video_path = engine.prepare_video(src, on_progress=on_progress, is_cancelled=is_cancelled)
+                    transcript = engine.transcribe(video_path, on_progress=on_progress, is_cancelled=is_cancelled)
+                    highlights = engine.get_highlights(
+                        transcript,
+                        num_clips=clips_per_src,
+                        api_key=api_key,
+                        provider=provider,
+                        clip_focus=clip_focus,
+                        keyword=keyword,
+                        on_progress=on_progress,
+                        is_cancelled=is_cancelled,
+                    )
+                    rendered = engine.render_shorts(
+                        video_path,
+                        highlights,
+                        transcript=transcript,
+                        aspect_ratio=aspect_ratio,
+                        layout=layout,
+                        captions=captions,
+                        caption_style=caption_style,
+                        custom_text=custom_text,
+                        custom_text_pos=custom_text_pos,
+                        sticker_badge=sticker_badge,
+                        progress_bar=progress_bar,
+                        color_grade=color_grade,
+                        bg_music_path=bg_music_path,
+                        combine_into_one=False,
+                        on_progress=on_progress,
+                        is_cancelled=is_cancelled,
+                    )
+                    all_rendered.extend(rendered)
+
+                if combine and len(all_rendered) > 1:
+                    on_progress(f"Combining {len(all_rendered)} clips from {len(sources)} videos into 1 compilation short...", 0.95)
+                    compilation = engine.combine_clips(
+                        [engine.shorts_dir / r["filename"] for r in all_rendered],
+                        title=f"Multi-Video Montage ({len(all_rendered)} Clips)",
+                        bg_music_path=bg_music_path,
+                        is_cancelled=is_cancelled
+                    )
+                    all_rendered.insert(0, compilation)
+
+            self._set(status="done", pct=1.0, log="Shorts generation complete!", shorts=all_rendered)
+        except JobCancelledError:
+            if self.engine:
+                self.engine.clean_temp_files()
+            self._set(status="idle", stage="", pct=0.0, log="Generation cancelled. Memory purged.")
+            purge_system_memory()
+        except Exception as e:
+            self._set(status="error", error=str(e), log=f"Error: {e}")
+        finally:
+            self.engine = None
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "claude-music-web/0.3"
     # Set by serve():
     runner: JobRunner = None
+    shorts_runner: ShortsRunner = None
     meta_store: MetaStore = None  # test override; normally resolved per request
+
+    def do_HEAD(self):
+        self.do_GET()
 
     def log_message(self, fmt, *args):  # quiet default access log
         pass
@@ -850,7 +1216,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(data)
+        if self.command != "HEAD":
+            with contextlib.suppress(BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                self.wfile.write(data)
 
     def _file(self, path, content_type):
         data = path.read_bytes()
@@ -858,7 +1226,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
-        self.wfile.write(data)
+        if self.command != "HEAD":
+            with contextlib.suppress(BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                self.wfile.write(data)
 
     def _read_body(self):
         try:
@@ -886,6 +1256,16 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self._file(WEBAPP_DIR / "index.html", "text/html; charset=utf-8")
+            elif path.startswith("/assets/"):
+                rel_name = path[len("/assets/"):].lstrip("/\\")
+                safe_name = Path(rel_name).name
+                asset_file = WEBAPP_DIR / "assets" / safe_name
+                if asset_file.exists() and asset_file.is_file():
+                    ext = asset_file.suffix.lower()
+                    ctype = "image/png" if ext == ".png" else "image/svg+xml" if ext == ".svg" else "image/jpeg" if ext in (".jpg", ".jpeg") else "application/octet-stream"
+                    self._file(asset_file, ctype)
+                else:
+                    self._json({"error": "asset not found"}, 404)
             elif path == "/api/status":
                 cfg = load_config()
                 snap = self.runner.snapshot()
@@ -903,9 +1283,34 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"tracks": self._meta().library()})
             elif path.startswith("/api/audio/"):
                 self._serve_audio(path[len("/api/audio/"):])
+            elif path == "/api/shorts/check-upload":
+                query = parse_qs(urlparse(self.path).query)
+                raw_name = (query.get("name") or [""])[0]
+                try:
+                    raw_size = int((query.get("size") or [0])[0])
+                except ValueError:
+                    raw_size = 0
+                safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", Path(raw_name).name) if raw_name else ""
+                dest = self._output_dir() / "uploads" / safe_name
+                if safe_name and dest.exists() and dest.is_file() and (raw_size <= 0 or dest.stat().st_size == raw_size):
+                    self._json({"exists": True, "path": str(dest.resolve()), "name": dest.name})
+                else:
+                    self._json({"exists": False})
+            elif path == "/api/shorts/progress":
+                self._json(self.shorts_runner.snapshot() if self.shorts_runner else {})
+            elif path == "/api/shorts/library":
+                if ShortsEngine is None:
+                    self._json({"shorts": []})
+                else:
+                    engine = ShortsEngine(self._output_dir())
+                    self._json({"shorts": engine.load_library()})
+            elif path.startswith("/api/shorts/video/"):
+                self._serve_shorts_video(path[len("/api/shorts/video/"):])
+            elif path.startswith("/api/shorts/thumb/"):
+                self._serve_shorts_thumb(path[len("/api/shorts/thumb/"):])
             else:
                 self._json({"error": "not found"}, 404)
-        except BrokenPipeError:
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
         except Exception as e:
             with contextlib.suppress(Exception):
@@ -940,6 +1345,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
                 self.send_header("Accept-Ranges", "bytes")
                 self.end_headers()
+            if self.command == "HEAD":
+                return
             f.seek(start)
             while remaining > 0:
                 chunk = f.read(min(65536, remaining))
@@ -947,13 +1354,12 @@ class Handler(BaseHTTPRequestHandler):
                     break
                 try:
                     self.wfile.write(chunk)
-                except BrokenPipeError:
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                     return
                 remaining -= len(chunk)
 
     # -- upload / analyze / optimize --------------------------------------
     def _handle_upload(self):
-        from urllib.parse import parse_qs
         query = parse_qs(urlparse(self.path).query)
         raw_name = (query.get("name") or [""])[0]
         out_dir = self._output_dir()
@@ -1062,9 +1468,10 @@ class Handler(BaseHTTPRequestHandler):
             f"measured_LRA={measured['input_lra']}:"
             f"measured_thresh={measured['input_thresh']}:"
             f"offset={measured.get('target_offset', 0)}:linear=true")
+        ffmpeg_bin = get_ffmpeg_bin()
         try:
             run = subprocess.run(
-                ["ffmpeg", "-hide_banner", "-nostdin", "-n", "-i", str(path),
+                [ffmpeg_bin, "-hide_banner", "-nostdin", "-n", "-i", str(path),
                  "-af", loudnorm] + spec["args"] + [str(dest)],
                 capture_output=True, text=True, timeout=600)
         except subprocess.TimeoutExpired:
@@ -1188,13 +1595,416 @@ class Handler(BaseHTTPRequestHandler):
                                  stdout=subprocess.DEVNULL,
                                  stderr=subprocess.DEVNULL)
                 self._json({"ok": True, "folder": folder})
+            elif path in ("/api/shorts/generate", "/api/shorts/pro-edit"):
+                body = self._read_body() or {}
+                if path == "/api/shorts/pro-edit":
+                    body["mode"] = "pro_autoedit"
+                if not self.shorts_runner:
+                    self._json({"error": "Shorts runner not initialized"}, 500)
+                    return
+                err = self.shorts_runner.start(body)
+                if err == "busy":
+                    self._json({"error": "A shorts generation job is already in progress"}, 409)
+                else:
+                    self._json({"started": True}, 202)
+            elif path == "/api/generate/cancel":
+                self.runner.cancel()
+                self._json({"ok": True, "status": "idle", "message": "Generation stopped and memory cleared."})
+            elif path == "/api/shorts/cancel":
+                if self.shorts_runner:
+                    self.shorts_runner.cancel()
+                self._json({"ok": True, "status": "idle", "message": "Shorts processing cancelled and memory purged."})
+            elif path == "/api/shorts/recut":
+                body = self._read_body() or {}
+                self._handle_shorts_recut(body)
+            elif path == "/api/shorts/metadata":
+                body = self._read_body() or {}
+                hook = str(body.get("hook") or "")
+                transcript = str(body.get("transcript") or "")
+                keyword = str(body.get("keyword") or "").strip()
+                try:
+                    duration = float(body.get("duration", 30.0))
+                except (ValueError, TypeError):
+                    duration = 30.0
+                if ShortsEngine is None:
+                    self._json({"error": "Shorts engine is not available"}, 503)
+                    return
+                cfg = load_config()
+                api_key = cfg.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY")
+                engine = ShortsEngine(self._output_dir())
+                meta = engine.generate_viral_metadata(
+                    hook,
+                    transcript,
+                    keyword=keyword,
+                    duration=duration,
+                    api_key=api_key,
+                )
+                self._json({"ok": True, "metadata": meta})
+            elif path == "/api/music/make-video":
+                body = self._read_body() or {}
+                self._handle_music_make_video(body)
+            elif path == "/api/voiceover":
+                body = self._read_body() or {}
+                self._handle_voiceover(body)
+            elif path == "/api/shorts/upload":
+                self._handle_video_upload()
+            elif path == "/api/shorts/mix-music":
+                self._handle_shorts_mix()
+            elif path == "/api/shorts/combine":
+                body = self._read_body() or {}
+                self._handle_shorts_combine(body)
             else:
                 self._json({"error": "not found"}, 404)
-        except BrokenPipeError:
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
         except Exception as e:
             with contextlib.suppress(Exception):
                 self._json({"error": str(e)}, 500)
+
+    def _serve_shorts_video(self, filename):
+        out_dir = self._output_dir()
+        safe_name = Path(unquote(str(filename))).name
+        if not safe_name or safe_name.startswith("."):
+            self._json({"error": "invalid filename"}, 400)
+            return
+        path = (out_dir / "shorts" / safe_name).resolve()
+        try:
+            path.relative_to((out_dir / "shorts").resolve())
+        except ValueError:
+            self._json({"error": "access denied"}, 403)
+            return
+        if not path.exists() or not path.is_file():
+            self._json({"error": "video not found"}, 404)
+            return
+        size = path.stat().st_size
+        ext = path.suffix.lower()
+        ctype = "video/webm" if ext == ".webm" else "video/quicktime" if ext in (".mov", ".qt") else "video/mp4"
+        rng = parse_range_header(self.headers.get("Range"), size)
+        with path.open("rb") as f:
+            if rng is None:
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(size))
+                self.send_header("Accept-Ranges", "bytes")
+                self.end_headers()
+                start, remaining = 0, size
+            else:
+                start, end = rng
+                remaining = end - start + 1
+                self.send_response(206)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(remaining))
+                self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+                self.send_header("Accept-Ranges", "bytes")
+                self.end_headers()
+            if self.command == "HEAD":
+                return
+            f.seek(start)
+            while remaining > 0:
+                chunk = f.read(min(131072, remaining))
+                if not chunk:
+                    break
+                try:
+                    self.wfile.write(chunk)
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    return
+                remaining -= len(chunk)
+
+    def _serve_shorts_thumb(self, filename):
+        out_dir = self._output_dir()
+        safe_name = Path(unquote(str(filename))).name
+        if not safe_name or safe_name.startswith("."):
+            self._json({"error": "invalid filename"}, 400)
+            return
+        path = (out_dir / "shorts" / safe_name).resolve()
+        try:
+            path.relative_to((out_dir / "shorts").resolve())
+        except ValueError:
+            self._json({"error": "access denied"}, 403)
+            return
+        if not path.exists() or not path.is_file():
+            self._json({"error": "thumbnail not found"}, 404)
+            return
+        ext = path.suffix.lower()
+        ctype = "image/png" if ext == ".png" else "image/webp" if ext == ".webp" else "image/jpeg"
+        self._file(path, ctype)
+
+    def _handle_video_upload(self):
+        query = parse_qs(urlparse(self.path).query)
+        raw_name = (query.get("name") or ["upload.mp4"])[0]
+        out_dir = self._output_dir()
+        upload_dir = out_dir / "uploads"
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", Path(raw_name).name)
+        dest = upload_dir / safe_name
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if length <= 0:
+            self._json({"error": "Empty upload"}, 400)
+            return
+
+        # If file with same name and size is already present, reuse existing copy directly!
+        if dest.exists() and dest.is_file() and dest.stat().st_size == length:
+            remaining = length
+            while remaining > 0:
+                chunk = self.rfile.read(min(131072, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+            self._json({"ok": True, "path": str(dest.resolve()), "name": dest.name, "reused": True})
+            return
+
+        remaining = length
+        with dest.open("wb") as f:
+            while remaining > 0:
+                chunk = self.rfile.read(min(65536, remaining))
+                if not chunk:
+                    break
+                f.write(chunk)
+                remaining -= len(chunk)
+        self._json({"ok": True, "path": str(dest.resolve()), "name": dest.name, "reused": False})
+
+    def _handle_shorts_mix(self):
+        body = self._read_body() or {}
+        clip_filename = body.get("clip_filename")
+        music_file = body.get("music_file")
+        out_dir = self._output_dir()
+        clip_path = (out_dir / "shorts" / Path(clip_filename).name).resolve() if clip_filename else None
+        music_path = safe_audio_path(out_dir, music_file) if music_file else None
+        if not clip_path or not clip_path.exists():
+            self._json({"error": "Short clip not found"}, 404)
+            return
+        if not music_path or not music_path.exists():
+            self._json({"error": "Music track not found"}, 404)
+            return
+        mixed_filename = f"mixed_{int(time.time())}_{clip_path.name}"
+        mixed_path = out_dir / "shorts" / mixed_filename
+        ffmpeg_bin = get_ffmpeg_bin()
+        mix_cmd = [
+            ffmpeg_bin, "-y", "-loglevel", "error",
+            "-i", str(clip_path),
+            "-i", str(music_path),
+            "-filter_complex",
+            "[1:a]volume=0.20,aloop=loop=-1:size=2e+09[bg];[0:a][bg]amix=inputs=2:duration=first[a]",
+            "-map", "0:v", "-map", "[a]",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-shortest",
+            str(mixed_path)
+        ]
+        try:
+            res = subprocess.run(mix_cmd, capture_output=True, text=True, timeout=180)
+            if res.returncode != 0:
+                tail = (res.stderr or "").strip()[-300:]
+                self._json({"error": f"Audio mix failed: {tail}"}, 500)
+                return
+        except subprocess.TimeoutExpired:
+            self._json({"error": "Audio mix timed out"}, 500)
+            return
+        except Exception as e:
+            self._json({"error": f"Audio mix failed: {e}"}, 500)
+            return
+        self._json({"ok": True, "filename": mixed_filename})
+
+    def _handle_shorts_recut(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+        clip_id = str(body.get("clip_id") or "").strip()
+        try:
+            start_time = max(0.0, float(body.get("start_time", 0.0)))
+            end_time = float(body.get("end_time", 30.0))
+        except (ValueError, TypeError):
+            self._json({"error": "Invalid start or end time"}, 400)
+            return
+        if end_time <= start_time:
+            self._json({"error": "End time must be greater than start time"}, 400)
+            return
+        captions = bool(body.get("captions", True))
+        caption_style = str(body.get("caption_style", "hormozi"))
+        custom_text = str(body.get("custom_text", "")).strip()
+        custom_text_pos = str(body.get("custom_text_pos", "top")).strip()
+        sticker_badge = str(body.get("sticker_badge", "")).strip()
+        progress_bar = str(body.get("progress_bar", "none")).strip()
+        color_grade = str(body.get("color_grade", "enhanced")).strip()
+        layout = str(body.get("layout", "single"))
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+        library = engine.load_library()
+        target_entry = next((e for e in library if e.get("id") == clip_id), None)
+        if not target_entry:
+            self._json({"error": "Clip not found"}, 404)
+            return
+
+        source_file = target_entry.get("source_file")
+        source_path = None
+        if source_file:
+            candidates = [
+                out_dir / "shorts" / "downloads" / source_file,
+                out_dir / "uploads" / source_file,
+                out_dir / source_file,
+                Path(source_file)
+            ]
+            for c in candidates:
+                if c.exists():
+                    source_path = c
+                    break
+        if not source_path:
+            source_path = out_dir / "shorts" / target_entry.get("filename", "")
+            if not source_path.exists():
+                self._json({"error": "Source video file not found"}, 404)
+                return
+
+        transcript_cache = out_dir / ".claude-music" / "transcripts" / f"{source_path.stem}.json"
+        transcript = None
+        if transcript_cache.exists():
+            try:
+                with transcript_cache.open(encoding="utf-8-sig") as f:
+                    transcript = json.load(f)
+            except Exception:
+                pass
+
+        highlight = [{
+            "title": target_entry.get("title", "Recut Short"),
+            "start_time": start_time,
+            "end_time": end_time,
+            "score": target_entry.get("score", 90),
+            "hook_sentence": target_entry.get("hook_sentence", ""),
+            "virality_reason": "Manually trimmed with precision.",
+        }]
+        shorts = engine.render_shorts(
+            source_path,
+            highlight,
+            transcript=transcript,
+            layout=layout,
+            captions=captions,
+            caption_style=caption_style,
+            custom_text=custom_text,
+            custom_text_pos=custom_text_pos,
+            sticker_badge=sticker_badge,
+            progress_bar=progress_bar,
+            color_grade=color_grade,
+        )
+        if shorts:
+            self._json({"ok": True, "short": shorts[0]})
+        else:
+            self._json({"error": "Failed to recut short"}, 500)
+
+    def _handle_music_make_video(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+        audio_file = body.get("audio_file")
+        style = body.get("style", "spectrum")
+        out_dir = self._output_dir()
+        src = safe_audio_path(out_dir, audio_file)
+        if not src or not src.exists():
+            src = safe_audio_path(out_dir / "uploads", audio_file)
+        if not src or not src.exists():
+            self._json({"error": "Audio file not found"}, 404)
+            return
+        engine = ShortsEngine(out_dir)
+        clip_id = f"mvideo_{int(time.time())}"
+        out_name = f"{clip_id}.mp4"
+        out_path = engine.shorts_dir / out_name
+        try:
+            engine.generate_music_video(src, out_path, title=src.stem.replace('_', ' ').title(), style=style)
+            thumb_name = f"{clip_id}.jpg"
+            thumb_path = engine.shorts_dir / thumb_name
+            ffmpeg_bin = get_ffmpeg_bin()
+            subprocess.run([ffmpeg_bin, "-y", "-loglevel", "error", "-ss", "00:00:01", "-i", str(out_path), "-vframes", "1", "-q:v", "2", str(thumb_path)], check=False)
+        except Exception as e:
+            self._json({"error": f"Failed to generate music video: {e}"}, 500)
+            return
+
+        entry = {
+            "id": clip_id,
+            "title": f"Music Video: {src.stem}",
+            "duration": 60.0,
+            "score": 92,
+            "hook_sentence": f"Vertical Visualizer for {src.stem}",
+            "virality_reason": "High-aesthetic vertical music video for TikTok & YouTube Shorts.",
+            "filename": out_name,
+            "thumbnail": thumb_name if thumb_path.exists() else None,
+            "created_at": time.time(),
+            "aspect_ratio": "9:16",
+            "layout": "single",
+            "captions": False,
+            "source_file": src.name,
+        }
+        engine.save_library_entry(entry)
+        self._json({"ok": True, "short": entry})
+
+    def _handle_shorts_combine(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+        clip_ids = body.get("clip_ids") or []
+        title = str(body.get("title") or "Multi-Clip Montage")
+        transition = str(body.get("transition") or "cut")
+        bg_music_file = body.get("bg_music_file")
+
+        if not clip_ids or len(clip_ids) < 2:
+            self._json({"error": "Please select at least 2 clips to combine."}, 400)
+            return
+
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+        library = engine.load_library()
+
+        clip_paths = []
+        for cid in clip_ids:
+            item = next((e for e in library if e.get("id") == cid), None)
+            if item and item.get("filename"):
+                p = engine.shorts_dir / item["filename"]
+                if p.exists():
+                    clip_paths.append(p)
+                    continue
+            for folder in [engine.shorts_dir, out_dir / "uploads", out_dir]:
+                candidate = folder / cid
+                if candidate.exists():
+                    clip_paths.append(candidate)
+                    break
+
+        if len(clip_paths) < 2:
+            self._json({"error": "Could not locate at least 2 of the specified clips on disk."}, 404)
+            return
+
+        bg_music_path = safe_audio_path(out_dir, bg_music_file) if bg_music_file else None
+
+        try:
+            entry = engine.combine_clips(
+                clip_paths,
+                title=title,
+                transition=transition,
+                bg_music_path=bg_music_path,
+            )
+            self._json({"ok": True, "short": entry})
+        except Exception as e:
+            self._json({"error": f"Failed to combine clips: {e}"}, 500)
+
+    def _handle_voiceover(self, body):
+        if synthesize_voiceover_sync is None:
+            self._json({"error": "Voiceover synthesis is not available"}, 503)
+            return
+        text = str(body.get("text", "")).strip()
+        voice = str(body.get("voice", "en-US-ChristopherNeural"))
+        if not text:
+            self._json({"error": "Voiceover text is required"}, 400)
+            return
+        out_dir = self._output_dir()
+        out_name = f"voiceover_{int(time.time())}.mp3"
+        out_path = out_dir / out_name
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(synthesize_voiceover_sync, text, voice, out_path)
+                future.result(timeout=60.0)
+            self._json({"ok": True, "file": out_name, "path": str(out_path)})
+        except concurrent.futures.TimeoutError:
+            self._json({"error": "Voiceover synthesis timed out after 60s. Please try a shorter script or check internet connection."}, 504)
+        except Exception as e:
+            self._json({"error": f"Voiceover failed: {e}"}, 500)
 
 
 def serve(port=8765, max_port=8775):
@@ -1202,6 +2012,7 @@ def serve(port=8765, max_port=8775):
     out_dir = resolve_output_dir(cfg)
     out_dir.mkdir(parents=True, exist_ok=True)
     Handler.runner = JobRunner(load_config)
+    Handler.shorts_runner = ShortsRunner(load_config)
     last_err = None
     for p in range(port, max_port + 1):
         try:
