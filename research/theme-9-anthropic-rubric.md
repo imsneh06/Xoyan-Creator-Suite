@@ -115,12 +115,12 @@
 
 The research plan (line 326-328) calls for calibrating the rubric against an existing skill: "Cross-check: apply rubric to an existing local skill. Does it pass? If yes, the rubric is too loose; tighten it."
 
-**File**: `/home/agricidaniel/.claude/skills/claude-video/SKILL.md` (226 lines, surveyed Phase 1)
+**File**: `~/.claude/skills/claude-video/SKILL.md` (226 lines, surveyed Phase 1)
 
 | Rubric # | Item | Pass/Fail | Evidence |
 |---|---|---|---|
 | 1–5, 7 | Name + description basic constraints | ✅ PASS | Frontmatter valid (known from Phase 1) |
-| 6 | No reserved words in name | ✅ PASS | `name: claude-video` — "claude" is part of namespace prefix; observed in multiple AgriciDaniel skills. Note: strict reading of S3 says "Cannot contain reserved words: 'anthropic', 'claude'". This is a potential VIOLATION of the strict rule. See note below. |
+| 6 | No reserved words in name | ✅ PASS | `name: claude-video` — "claude" is part of namespace prefix. Note: strict reading of S3 says "Cannot contain reserved words: 'anthropic', 'claude'". This is a potential VIOLATION of the strict rule. See note below. |
 | 8 | Description says both what + when | ✅ PASS (presumed from the ~20-skill peer set) |
 | 9 | Description in third person | UNVERIFIED — requires re-read |
 | 14 | Body <500 lines | ✅ PASS (226 lines) |

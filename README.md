@@ -1,15 +1,16 @@
 <p align="center">
-  <img src="assets/Claude-Music-cover.png" alt="claude-music, AI music production for Claude Code" width="720">
+  <img src="skills/claude-music/webapp/assets/xoyan-logo.png" alt="Xoyan Studio - Private AI Suite for Creators" width="160">
 </p>
 
-# claude-music
+# Xoyan Studio
 
-Make full songs on your own computer by describing them in plain words.
+**The All-in-One Private AI Suite for Creators.**  
+*No subscriptions, no cloud fees, no video watermarks. AI Music, Vertical Shorts & Voiceover running 100% locally on your PC.*
 
-claude-music turns [Claude Code](https://claude.ai/code) into a music studio,
-powered by [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5). Type
-"make me a chill lo-fi beat" and get a finished track in about 15 seconds.
-No cloud, no subscription, no per-song fees. Your GPU does the work.
+> **Official Property of Xoyan**  
+> Founder: Sneh Dutta · Website: [www.xoyan.org](https://www.xoyan.org)
+
+Make full studio songs, auto-edited vertical shorts, and neural voiceovers right on your computer. Powered by local AI models with zero cloud reliance. Your GPU does the work.
 
 <p align="center">
   <img src="assets/screens/dashboard.png" alt="The claude-music dashboard: describe a song, pick styles, and watch it generate, with a real waveform player and a library of your tracks" width="820">
@@ -33,7 +34,7 @@ and vocals in three languages:
 One command installs everything:
 
 ```bash
-git clone https://github.com/AgriciDaniel/claude-music.git
+git clone https://github.com/imsneh06/claude-music.git
 cd claude-music
 bash install.sh
 ```
@@ -60,7 +61,7 @@ Or open the dashboard in your browser:
 | "Create an instrumental jazz piece" | Instrumental track |
 | "Make a rock cover of this song" | Your song, remade in a new style |
 | "Fix the chorus, make it more energetic" | Edits just that section |
-| "Export for Spotify" | Loudness-ready file for the platform |
+| "Export for streaming" | Loudness-ready file for streaming platforms |
 | "Surprise me" | Random genre, instant song |
 
 ## The Dashboard
@@ -150,7 +151,7 @@ suffix. Set `"naming": "uuid"` to keep the original names.
 /music cover      - Remake a song in a different style
 /music repaint    - Edit a section of a song
 /music compose    - Songwriting help (lyrics, caption, BPM)
-/music export     - Export for Spotify/YouTube/TikTok/etc
+/music export     - Export for major platforms (loudness optimized)
 /music analyze    - Check BPM, key, loudness
 /music enhance    - Normalize, denoise, separate stems
 /music random     - Random generation (surprise me!)
@@ -244,7 +245,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and
 ### v0.4
 
 The dashboard release. Full notes on the
-[releases page](https://github.com/AgriciDaniel/claude-music/releases/tag/v0.4.0).
+[releases page](https://github.com/imsneh06/claude-music/releases).
 
 - Web dashboard (`/music web`): chat-style composer with a 28-genre style
   dropdown, live progress, a real-waveform player, generative album art,
@@ -283,7 +284,7 @@ redistributing it; the installer sets it up separately. Generated audio
 inherits no licensing obligations from this skill; consult ACE-Step's
 license for model output licensing.
 
-## Credits
+## Credits & Property
 
-Built on [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5) by the
-ACE Studio team. Skill by [Daniel Agrici](https://github.com/AgriciDaniel).
+**Xoyan Studio** is an official property of **[Xoyan](https://www.xoyan.org)**, founded by **Sneh Dutta**.
+Built on local AI synthesis engines including [ACE-Step 1.5](https://github.com/ace-step/ACE-Step-1.5). All rights reserved.

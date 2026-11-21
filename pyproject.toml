@@ -1,13 +1,13 @@
 [project]
-name = "claude-music"
+name = "xoyan-studio"
 version = "0.4.0"
-description = "AI music production skill for Claude Code, powered by ACE-Step 1.5"
+description = "Xoyan Studio: The All-in-One Private AI Suite for Creators (AI Music, Vertical Shorts & Voiceover)"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Daniel Agrici" }]
+authors = [{ name = "Xoyan", email = "contact@xoyan.org" }]
 requires-python = ">=3.10"
-keywords = ["music", "ace-step", "claude-code", "ai-music"]
+keywords = ["xoyan", "xoyan-studio", "music", "shorts", "voiceover", "ace-step", "ai-music"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -45,9 +45,9 @@ ranking = [
 packages = []
 
 [project.urls]
-Homepage = "https://github.com/AgriciDaniel/claude-music"
-Repository = "https://github.com/AgriciDaniel/claude-music"
-Issues = "https://github.com/AgriciDaniel/claude-music/issues"
+Homepage = "https://www.xoyan.org"
+Repository = "https://github.com/imsneh06/claude-music"
+Issues = "https://github.com/imsneh06/claude-music/issues"
 
 [tool.ruff]
 line-length = 120

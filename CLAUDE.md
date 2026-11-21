@@ -1,6 +1,9 @@
-# claude-music
+# Xoyan Studio
 
-AI music production skill for Claude Code, powered by ACE-Step 1.5.
+**The All-in-One Private AI Suite for Creators**  
+*Official Property of Xoyan (founder: Sneh Dutta · [www.xoyan.org](https://www.xoyan.org))*
+
+Private, 100% local AI Music, Vertical Shorts & Voiceover production suite.
 
 ## Project Structure
 

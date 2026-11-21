@@ -10,9 +10,9 @@
 | Repo | Role | Source |
 |---|---|---|
 | `claude-music` (ours) | Subject of refactor | `~/Desktop/Claude-music/` |
-| `acestep` (the ACE-Step team's Claude Code skill) | Domain competitor — research plan called this "the single most important competitive artifact" | `/home/agricidaniel/Desktop/Local-AI-Models/ACE-Step-1.5/.claude/skills/acestep/` |
-| `claude-seo` (AgriciDaniel) | Architectural sibling — same author, same `skills/<feature>/SKILL.md` pattern | `github.com/AgriciDaniel/claude-seo` |
-| `claude-blog` (AgriciDaniel) | Architectural sibling w/ tests | `github.com/AgriciDaniel/claude-blog` |
+| `acestep` (the ACE-Step team's Claude Code skill) | Domain competitor — research plan called this "the single most important competitive artifact" | `~/.claude/skills/acestep/` |
+| `claude-seo` | Architectural sibling — same `skills/<feature>/SKILL.md` pattern | `skills/claude-seo` |
+| `claude-blog` | Architectural sibling w/ tests | `skills/claude-blog` |
 | `bitwize-music-studio/claude-ai-music-skills` | Music-domain competitor — 52 skills, bundled MCP server | `github.com/bitwize-music-studio/claude-ai-music-skills` |
 | `anthropics/skills` | Official exemplars | `github.com/anthropics/skills` |
 
@@ -86,7 +86,7 @@
 | 6 | no reserved words | ⚠️ AMBIGUOUS | Uses `claude-` prefix; same pattern as Anthropic's `claude-api` skill — flagged G16 |
 | 7 | description non-empty, ≤1024 chars | ✅ PASS | 11 lines, ~550 chars |
 | 8 | describes what + when | ✅ PASS | Lines 3-12 of SKILL.md |
-| 9 | description in third person | ⚠️ PARTIAL | "AI-powered music production suite..." is 3rd-person; "Use when user says..." breaks into 2nd-person pattern (acceptable in AgriciDaniel's other skills) |
+| 9 | description in third person | ⚠️ PARTIAL | "AI-powered music production suite..." is 3rd-person; "Use when user says..." breaks into 2nd-person pattern |
 | 10 | combined desc+when_to_use front-loads use case | ✅ PASS | |
 | 11 | `disable-model-invocation: true` where applicable | ❌ NOT SET | No skills opt out; this is fine for our use — no destructive actions |
 | 12 | `allowed-tools` as space-separated or YAML list | ✅ PASS | YAML list used |

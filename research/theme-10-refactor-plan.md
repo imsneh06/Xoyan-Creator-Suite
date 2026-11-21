@@ -70,9 +70,9 @@
   "name": "claude-music",
   "description": "AI-powered music production suite using ACE-Step 1.5 via direct Python API. Song generation, cover, repaint, compose, analyze, export, enhance, lora.",
   "version": "0.1.0",
-  "author": {"name": "AgriciDaniel"},
-  "repository": "https://github.com/AgriciDaniel/claude-music",
-  "homepage": "https://github.com/AgriciDaniel/claude-music#readme",
+  "author": {"name": "Xoyan", "url": "https://www.xoyan.org"},
+  "repository": "https://github.com/imsneh06/claude-music",
+  "homepage": "https://www.xoyan.org",
   "license": "MIT",
   "skills": "./skills/",
   "keywords": ["music", "ace-step", "music-generation", "ai-music", "text-to-music", "cover", "repaint", "lora", "claude-code"]

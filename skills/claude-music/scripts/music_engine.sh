@@ -49,7 +49,7 @@ show_star_prompt() {
         touch "$STAR_MARKER"
         # Always write to stderr so the JSON stdout contract is preserved.
         printf '\n\033[0;36m★ Liked claude-music? A GitHub star helps others find it:\033[0m\n' >&2
-        printf '  https://github.com/AgriciDaniel/claude-music\n\n' >&2
+        printf '  https://www.xoyan.org\n\n' >&2
     fi
 }
 

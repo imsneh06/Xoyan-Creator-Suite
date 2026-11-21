@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-**Do not open a public GitHub issue.** Email **agricidaniel@gmail.com** with the subject `claude-music security: <short description>`.
+**Do not open a public GitHub issue.** Email **security@xoyan.org** (or **contact@xoyan.org**) with the subject `Xoyan Studio security: <short description>`.
 
 Include:
 - Affected version / commit SHA

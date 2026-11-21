@@ -7,7 +7,7 @@ description: >
 when_to_use: >
   Use when the user says /music, asks to generate a song, create music, make a
   track, cover/remix/repaint/edit audio, write lyrics, compose, analyze BPM/key,
-  export for Spotify/TikTok, master audio, train a LoRA, or mentions ACE-Step.
+  export for streaming platforms, master audio, train a LoRA, or mentions ACE-Step.
 compatibility: >
   Requires ACE-Step 1.5 installed locally + NVIDIA GPU with ≥4 GB VRAM
   (≥12 GB recommended). Path configured in skills/claude-music/config.json.
@@ -35,7 +35,7 @@ allowed-tools:
 | `/music complete` | Continue/extend audio (base model only) |
 | `/music compose` | Songwriting: craft caption + lyrics + params |
 | `/music analyze` | BPM, key, loudness, duration analysis |
-| `/music export` | Platform-optimized export (Spotify, YouTube, etc.) |
+| `/music export` | Platform-optimized export (streaming services) |
 | `/music enhance` | Post-processing: normalize, denoise, stem separate |
 | `/music random` | Quick random generation with smart defaults |
 | `/music library` | Browse and manage generated music |
@@ -54,7 +54,7 @@ When the user provides a specific command, load the matching sub-skill:
 - `/music repaint` or intent is edit section/fix chorus/change part/modify section → Read `skills/claude-music-repaint/SKILL.md`
 - `/music compose` or intent is write lyrics/craft caption/plan song/songwriting → Read `skills/claude-music-compose/SKILL.md`
 - `/music analyze` or intent is BPM/key detection/loudness/audio info → Read `skills/claude-music-analyze/SKILL.md`
-- `/music export` or intent is export for Spotify/YouTube/platform/format conversion → Read `skills/claude-music-export/SKILL.md`
+- `/music export` or intent is export for streaming/platform/format conversion → Read `skills/claude-music-export/SKILL.md`
 - `/music enhance` or intent is normalize/denoise/stem separate/master → Read `skills/claude-music-enhance/SKILL.md`
 - `/music random` or intent is quick generation/surprise me/random song → Read `skills/claude-music-random/SKILL.md`
 - `/music library` or intent is list songs/browse output/manage music → Read `skills/claude-music-library/SKILL.md`
@@ -73,7 +73,7 @@ When user says `/music` without arguments or describes a task in natural languag
 
 ### Multi-Step Pipelines
 
-For complex requests spanning multiple sub-skills (e.g., "compose lyrics, generate a song, then export for Spotify"):
+For complex requests spanning multiple sub-skills (e.g., "compose lyrics, generate a song, then export for streaming"):
 1. Compose lyrics/caption with `/music compose`
 2. Generate with `/music generate` using composed output
 3. Export with `/music export`

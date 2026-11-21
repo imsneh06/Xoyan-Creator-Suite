@@ -1,6 +1,8 @@
-# Contributing to claude-music
+# Contributing to Xoyan Studio
 
-Thanks for wanting to help. This project has a narrow mission — make ACE-Step 1.5 easy to use from Claude Code — so contributions are accepted in these categories:
+> **Official Property of Xoyan** (founder: Sneh Dutta · [www.xoyan.org](https://www.xoyan.org))
+
+Thanks for wanting to help with Xoyan Studio. This project provides an all-in-one private AI creative suite (AI Music, Vertical Shorts, and Voiceovers) running 100% locally. Contributions are accepted in these categories:
 
 ## Accepted contributions
 

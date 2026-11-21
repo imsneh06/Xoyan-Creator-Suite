@@ -1,13 +1,13 @@
 {
-  "name": "claude-music",
+  "name": "xoyan-studio",
   "owner": {
-    "name": "AgriciDaniel",
-    "url": "https://github.com/AgriciDaniel"
+    "name": "Xoyan",
+    "url": "https://www.xoyan.org"
   },
   "plugins": [
     {
-      "name": "claude-music",
-      "description": "AI music production suite using ACE-Step 1.5 — generate, cover, repaint, compose, analyze, export, enhance, LoRA-train. Direct Python API, no REST server required.",
+      "name": "xoyan-studio",
+      "description": "Xoyan Studio: The All-in-One Private AI Suite for Creators. AI Music, Vertical Shorts & Voiceover running 100% locally on your PC.",
       "version": "0.4.0",
       "source": "./"
     }

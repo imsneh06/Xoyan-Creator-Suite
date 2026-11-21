@@ -1,21 +1,24 @@
 cff-version: 1.2.0
-message: "If you use claude-music in research, please cite both this skill and the underlying ACE-Step 1.5 model."
-title: "claude-music: AI music production skill for Claude Code"
+message: "If you use Xoyan Studio in research or production, please cite this project."
+title: "Xoyan Studio: The All-in-One Private AI Suite for Creators"
 version: "0.4.0"
-date-released: "2026-04-16"
-url: "https://github.com/AgriciDaniel/claude-music"
-repository-code: "https://github.com/AgriciDaniel/claude-music"
+date-released: "2026-11-22"
+url: "https://www.xoyan.org"
+repository-code: "https://github.com/imsneh06/claude-music"
 license: MIT
 authors:
-  - family-names: "Agrici"
-    given-names: "Daniel"
-    email: "agricidaniel@gmail.com"
+  - family-names: "Xoyan"
+    given-names: "Studio"
+    email: "contact@xoyan.org"
 keywords:
+  - xoyan
+  - xoyan-studio
   - ace-step
   - music-generation
-  - claude-code
   - ai-music
   - text-to-music
+  - vertical-shorts
+  - voiceover
 references:
   - type: software
     title: "ACE-Step"

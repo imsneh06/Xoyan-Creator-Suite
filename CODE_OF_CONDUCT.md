@@ -9,11 +9,11 @@ We follow the [Contributor Covenant v2.1](https://www.contributor-covenant.org/v
 - Be respectful. Assume the other person is acting in good faith.
 - Disagree with ideas, not people.
 - Harassment, discrimination, or personal attacks are not tolerated in issues, PRs, discussions, or any space associated with this project.
-- If you see behavior that violates this, email **agricidaniel@gmail.com**.
+- If you see behavior that violates this, email **contact@xoyan.org**.
 
 ## Enforcement
 
-The maintainer reserves the right to close PRs, lock threads, and block users who violate the Covenant. Actions are final; appeals by email.
+The Xoyan project maintainers reserve the right to close PRs, lock threads, and block users who violate the Covenant. Actions are final; appeals by email to **contact@xoyan.org**.
 
 ## Scope
 
