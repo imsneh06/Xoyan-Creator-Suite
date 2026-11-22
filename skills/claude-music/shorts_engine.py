@@ -64,10 +64,13 @@ class JobCancelledError(Exception):
 
 
 def get_ffmpeg_bin() -> str:
-    """Resolve FFmpeg binary path reliably across Windows and POSIX."""
+    """Resolve FFmpeg binary path reliably across macOS, Linux, and Windows."""
     found = shutil.which("ffmpeg")
     if found:
         return found
+    for mac_bin in ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]:
+        if Path(mac_bin).exists():
+            return mac_bin
     local_app_data = os.environ.get("LOCALAPPDATA")
     if local_app_data:
         winget_path = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe"
@@ -97,10 +100,13 @@ def has_audio_stream(file_path: Path) -> bool:
 
 
 def get_ffprobe_bin() -> str:
-    """Resolve FFprobe binary path reliably across Windows and POSIX."""
+    """Resolve FFprobe binary path reliably across macOS, Linux, and Windows."""
     found = shutil.which("ffprobe")
     if found:
         return found
+    for mac_bin in ["/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"]:
+        if Path(mac_bin).exists():
+            return mac_bin
     local_app_data = os.environ.get("LOCALAPPDATA")
     if local_app_data:
         winget_path = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffprobe.exe"
@@ -1796,7 +1802,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         clean_artist = re.sub(r"[':\\]", "", artist)[:28]
 
         font_arg = ""
-        for candidate in ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/segoeui.ttf", "C:/Windows/Fonts/calibri.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]:
+        for candidate in [
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/Library/Fonts/Arial.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]:
             if os.path.exists(candidate):
                 escaped_font = candidate.replace(":", "\\:")
                 font_arg = f":fontfile='{escaped_font}'"
@@ -2165,7 +2179,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
         vis_filter = f"showwaves=s=960x320:mode=cline:colors={cfg['wave']}"
         font_arg = ""
-        for candidate in ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/segoeui.ttf", "C:/Windows/Fonts/calibri.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]:
+        for candidate in [
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "C:/Windows/Fonts/calibri.ttf",
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/Library/Fonts/Arial.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]:
             if os.path.exists(candidate):
                 escaped_font = candidate.replace(":", "\\:")
                 font_arg = f":fontfile='{escaped_font}'"

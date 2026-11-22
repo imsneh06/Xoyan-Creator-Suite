@@ -8,6 +8,7 @@ SKILL_DIR = Path(__file__).resolve().parent.parent / "skills" / "claude-music"
 if str(SKILL_DIR) not in sys.path:
     sys.path.insert(0, str(SKILL_DIR))
 
+import shorts_engine  # noqa: E402
 from reel_autoedit import build_filter_graph, write_ass_captions  # noqa: E402
 from shorts_engine import ShortsEngine  # noqa: E402
 
@@ -370,8 +371,8 @@ def test_shorts_engine_manual_edit_short(tmp_path, monkeypatch):
     dummy_src = tmp_path / "source.mp4"
     dummy_src.write_text("video")
 
-    monkeypatch.setattr("skills.claude-music.shorts_engine.probe_duration", lambda p: 20.0)
-    monkeypatch.setattr("skills.claude-music.shorts_engine.has_audio_stream", lambda p: True)
+    monkeypatch.setattr(shorts_engine, "probe_duration", lambda p: 20.0)
+    monkeypatch.setattr(shorts_engine, "has_audio_stream", lambda p: True)
 
     recorded_cmds = []
 

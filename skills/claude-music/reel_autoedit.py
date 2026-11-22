@@ -47,10 +47,13 @@ def is_sentence_terminator(word: str) -> bool:
 
 
 def get_ffmpeg_bin() -> str:
-    """Resolve FFmpeg binary reliably."""
+    """Resolve FFmpeg binary reliably across macOS, Linux, and Windows."""
     found = shutil.which("ffmpeg")
     if found:
         return found
+    for mac_bin in ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"]:
+        if Path(mac_bin).exists():
+            return mac_bin
     local_app_data = os.environ.get("LOCALAPPDATA")
     if local_app_data:
         winget = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe"
@@ -60,10 +63,13 @@ def get_ffmpeg_bin() -> str:
 
 
 def get_ffprobe_bin() -> str:
-    """Resolve FFprobe binary reliably."""
+    """Resolve FFprobe binary reliably across macOS, Linux, and Windows."""
     found = shutil.which("ffprobe")
     if found:
         return found
+    for mac_bin in ["/opt/homebrew/bin/ffprobe", "/usr/local/bin/ffprobe"]:
+        if Path(mac_bin).exists():
+            return mac_bin
     local_app_data = os.environ.get("LOCALAPPDATA")
     if local_app_data:
         winget = Path(local_app_data) / "Microsoft" / "WinGet" / "Links" / "ffprobe.exe"
