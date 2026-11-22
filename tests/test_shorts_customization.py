@@ -62,6 +62,23 @@ def test_reel_filter_graph_no_captions_no_text():
     assert "eq=" not in vf
 
 
+def test_reel_filter_graph_silent_source_and_music():
+    dummy_clips = [
+        {"start": 0.0, "end": 4.0, "words": []},
+    ]
+    vf = build_filter_graph(
+        clips=dummy_clips,
+        captions_filename=None,
+        has_music=True,
+        has_source_audio=False,
+    )
+    assert "aevalsrc=0:d=4.000:s=44100" in vf
+    assert "asplit=2[sp1][sp2]" in vf
+    assert "[vout]" in vf
+    assert "[aout]" in vf
+
+
+
 def test_shorts_engine_clip_focus_diversity(tmp_path):
     engine = ShortsEngine(tmp_path)
     # Mock transcript spanning 120 seconds with questions and high engagement markers
@@ -194,4 +211,25 @@ def test_autoedit_reel_caption_style_support(tmp_path, monkeypatch):
     assert mock_autoedit.called
     kwargs = mock_autoedit.call_args[1]
     assert kwargs.get("caption_style") == "clean"
+
+
+def test_reel_clips_tuple_and_dict_normalization(tmp_path):
+    from reel_autoedit import fit_to_target, normalize_clips, total_duration
+
+    # Mix of tuples and dicts
+    mixed = [(0.0, 5.0), {"start": 5.0, "end": 12.0, "words": []}, (12.0, 20.0)]
+    norm = normalize_clips(mixed)
+    assert len(norm) == 3
+    assert norm[0]["start"] == 0.0 and norm[0]["end"] == 5.0
+    assert norm[1]["start"] == 5.0 and norm[1]["end"] == 12.0
+    assert norm[2]["start"] == 12.0 and norm[2]["end"] == 20.0
+
+    # Total duration should handle raw tuples without TypeError: tuple indices must be integers or slices, not str
+    dur = total_duration([(0.0, 4.5), (4.5, 10.0)])
+    assert dur == 10.0
+
+    # fit_to_target should safely handle tuples
+    fitted = fit_to_target([(0.0, 10.0), (10.0, 20.0), (20.0, 30.0)], target=15.0)
+    assert total_duration(fitted) <= 15.0
+
 

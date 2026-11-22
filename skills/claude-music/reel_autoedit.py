@@ -94,6 +94,20 @@ def probe_duration(path: Path) -> float:
     return 30.0
 
 
+def check_has_audio(path: Path) -> bool:
+    """Check whether the given media file has at least one audio stream."""
+    ffprobe_bin = get_ffprobe_bin()
+    try:
+        out = subprocess.check_output(
+            [ffprobe_bin, "-v", "error", "-select_streams", "a",
+             "-show_entries", "stream=index", "-of", "csv=p=0", str(path.resolve())],
+            text=True
+        )
+        return bool(out.strip())
+    except Exception:
+        return False
+
+
 def extract_audio_wav(src_path: Path, out_wav: Path) -> bool:
     """Extract standard 16kHz mono WAV to guarantee Whisper decoding stability."""
     ffmpeg_bin = get_ffmpeg_bin()
@@ -199,12 +213,34 @@ def build_clips(words: list[dict[str, Any]], src_dur: float) -> list[dict[str, A
     return [c for c in clips if c["end"] - c["start"] > 0.25]
 
 
-def total_duration(clips: list[dict[str, Any]]) -> float:
-    return sum(float(c["end"] - c["start"]) for c in clips)
+def normalize_clip(c: Any) -> dict[str, Any]:
+    """Ensure any clip representation (dict, tuple, or list) is safely accessed as a standardized dict."""
+    if isinstance(c, dict):
+        return {
+            "start": float(c.get("start", 0.0)),
+            "end": float(c.get("end", 0.0)),
+            "words": list(c.get("words", [])),
+        }
+    if isinstance(c, (list, tuple)) and len(c) >= 2:
+        return {
+            "start": float(c[0]),
+            "end": float(c[1]),
+            "words": list(c[2]) if len(c) > 2 and isinstance(c[2], (list, tuple)) else [],
+        }
+    return {"start": 0.0, "end": 0.0, "words": []}
 
 
-def fit_to_target(clips: list[dict[str, Any]], target: float) -> list[dict[str, Any]]:
+def normalize_clips(clips: list[Any]) -> list[dict[str, Any]]:
+    return [normalize_clip(c) for c in clips]
+
+
+def total_duration(clips: list[Any]) -> float:
+    return sum(float(c["end"] - c["start"]) for c in normalize_clips(clips))
+
+
+def fit_to_target(clips: list[Any], target: float) -> list[dict[str, Any]]:
     """Preserve opening hook (first) and CTA (last); drop least word-dense middle segments."""
+    clips = normalize_clips(clips)
     if not clips:
         return []
 
@@ -248,7 +284,7 @@ def ass_time(t: float) -> str:
 
 
 def write_ass_captions(
-    clips: list[dict[str, Any]],
+    clips: list[Any],
     path: Path,
     burn_captions: bool = True,
     custom_text: str = "",
@@ -257,6 +293,7 @@ def write_ass_captions(
     **kwargs: Any,
 ) -> bool:
     """Burned-in high-impact viral captions, custom headline text, and corner sticker badge."""
+    clips = normalize_clips(clips)
     total_dur = sum(float(c["end"] - c["start"]) for c in clips) if clips else 30.0
     end_str = ass_time(total_dur)
     lines = []
@@ -311,32 +348,42 @@ def write_ass_captions(
 
 
 def build_filter_graph(
-    clips: list[dict[str, Any]],
+    clips: list[Any],
     captions_filename: str | None,
     has_music: bool,
+    has_source_audio: bool = True,
     color_grade: str = "enhanced",
     progress_bar: str = "none",
 ) -> str:
     """Build high-efficiency FFmpeg filtergraph with cuts, zooms, picture enhancements, and audio mastering."""
+    clips = normalize_clips(clips)
     parts = []
     n = len(clips)
 
     for i, c in enumerate(clips):
         d = c["end"] - c["start"]
         # Alternate wide shot (1.0x) and animated punch-in zoom (1.15x) every cut
-        zoom = ""
         if i % 2 == 1:
-            zoom = f"scale=w='1080*(1+{ZOOM}*min(t/{ZOOM_TIME},1))':h=-2:eval=frame,crop=1080:1920,"
+            scale_filter = "scale=1242:2208:force_original_aspect_ratio=increase,crop=1080:1920"
+        else:
+            scale_filter = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920"
 
         parts.append(
             f"[0:v]trim=start={c['start']:.3f}:end={c['end']:.3f},setpts=PTS-STARTPTS,"
-            f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,{zoom}"
-            f"fps=30,format=yuv420p[v{i}]"
+            f"{scale_filter},setsar=1,fps=30,format=yuv420p[v{i}]"
         )
-        parts.append(
-            f"[0:a]atrim=start={c['start']:.3f}:end={c['end']:.3f},asetpts=PTS-STARTPTS,"
-            f"afade=t=in:d=0.02,afade=t=out:st={max(d - 0.02, 0.0):.3f}:d=0.02[a{i}]"
-        )
+        if has_source_audio:
+            fade_part = ""
+            if d > 0.08:
+                fade_part = f",afade=t=in:d=0.02,afade=t=out:st={max(d - 0.02, 0.0):.3f}:d=0.02"
+            parts.append(
+                f"[0:a]atrim=start={c['start']:.3f}:end={c['end']:.3f},asetpts=PTS-STARTPTS"
+                f"{fade_part},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a{i}]"
+            )
+        else:
+            parts.append(
+                f"aevalsrc=0:d={d:.3f}:s=44100,aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[a{i}]"
+            )
 
     # Concat all visual and audio segments
     concat_in = "".join(f"[v{i}][a{i}]" for i in range(n))
@@ -360,7 +407,7 @@ def build_filter_graph(
     if progress_bar and progress_bar != "none":
         pcolor = "red@0.95" if progress_bar == "red" else "yellow@0.95" if progress_bar == "yellow" else "cyan@0.95" if progress_bar == "cyan" else "white@0.95"
         total_dur = sum(float(c["end"] - c["start"]) for c in clips) if clips else 30.0
-        pbar_filter = f",drawbox=x=0:y=ih-14:w='iw*(t/{max(0.1, total_dur):.3f})':h=14:color={pcolor}:t=fill"
+        pbar_filter = f",drawbox=x=0:y=ih-14:w='max(1, iw*min(1, t/{max(0.1, total_dur):.3f}))':h=14:color={pcolor}:t=fill"
 
     ass_filter = ""
     if captions_filename:
@@ -370,22 +417,29 @@ def build_filter_graph(
     parts.append(f"[vc]{grade_filter}{pbar_filter}{ass_filter}[vout]")
 
     # Audio enhancement: High-pass 80 Hz, FFT denoise (-25 dB), compression, 3 kHz presence EQ
-    voice = (
-        "highpass=f=80,afftdn=nf=-25,"
-        "acompressor=threshold=-18dB:ratio=3:attack=5:release=80,"
-        "equalizer=f=3000:t=q:w=1:g=2"
-    )
+    if has_source_audio:
+        voice = (
+            "highpass=f=80,afftdn=nf=-25,"
+            "acompressor=threshold=-18dB:ratio=3:attack=5:release=80,"
+            "equalizer=f=3000:t=q:w=1:g=2"
+        )
+    else:
+        voice = "anull"
 
     if has_music:
-        parts.append(f"[ac]{voice},asplit=2[v1][v2]")
-        parts.append("[1:a]volume=0.35[m]")
-        parts.append("[m][v1]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=300[duck]")
+        parts.append(f"[ac]{voice},asplit=2[sp1][sp2]")
+        parts.append("[1:a]volume=0.35,aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[m]")
+        parts.append("[m][sp1]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=300[duck]")
         parts.append(
-            "[v2][duck]amix=inputs=2:duration=first:normalize=0,"
+            "[sp2][duck]amix=inputs=2:duration=first:normalize=0,"
+            "aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
             "loudnorm=I=-14:TP=-1:LRA=11[aout]"
         )
     else:
-        parts.append(f"[ac]{voice},loudnorm=I=-14:TP=-1:LRA=11[aout]")
+        parts.append(
+            f"[ac]{voice},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
+            "loudnorm=I=-14:TP=-1:LRA=11[aout]"
+        )
 
     return ";\n".join(parts)
 
@@ -432,14 +486,17 @@ def autoedit_video(
         raw_clips = []
         while cur < src_dur and (len(raw_clips) * 4.0) < target_duration:
             clip_end = min(cur + min(4.0, target_duration - (len(raw_clips) * 4.0)), src_dur)
-            raw_clips.append((round(cur, 2), round(clip_end, 2)))
+            raw_clips.append({"start": round(cur, 2), "end": round(clip_end, 2), "words": []})
             cur += step
-        clips = raw_clips if raw_clips else [(0.0, min(target_duration, src_dur))]
+        clips = raw_clips if raw_clips else [{"start": 0.0, "end": min(target_duration, src_dur), "words": []}]
     else:
         if on_progress:
             on_progress("Pro Auto-Editor: Cutting dead air, fillers, and fitting runtime...", 0.45)
         raw_clips = build_clips(words, src_dur)
         clips = fit_to_target(raw_clips, target_duration)
+    clips = [c for c in normalize_clips(clips) if c["end"] - c["start"] >= 0.25]
+    if not clips:
+        clips = [{"start": 0.0, "end": min(target_duration, src_dur), "words": []}]
     final_dur = total_duration(clips)
 
     if not clips:
@@ -455,9 +512,11 @@ def autoedit_video(
     )
 
     cap_name = captions_file.name if has_subtitles else None
+    has_audio = check_has_audio(src)
     filter_complex = build_filter_graph(
         clips, cap_name,
         has_music=bool(music_path and music_path.exists()),
+        has_source_audio=has_audio,
         color_grade=color_grade,
         progress_bar=progress_bar,
     )
@@ -483,7 +542,8 @@ def autoedit_video(
 
     proc = subprocess.run(cmd, cwd=str(work), capture_output=True, text=True)
     if proc.returncode != 0:
-        raise RuntimeError(f"FFmpeg render failed (exit {proc.returncode}): {proc.stderr[-400:]}")
+        err_msg = proc.stderr.strip() if proc.stderr else "Unknown error"
+        raise RuntimeError(f"FFmpeg render failed (exit {proc.returncode}): {err_msg[-800:]}")
 
     # Generate thumbnail
     thumb_path = work / f"{out.stem}.jpg"

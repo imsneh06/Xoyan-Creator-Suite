@@ -788,13 +788,19 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
             self.tracked_temp_files.extend([raw_cut, silent_cropped, ass_path])
 
-            start_t = h["start_time"]
-            end_t = h["end_time"]
+            if isinstance(h, (list, tuple)):
+                start_t = float(h[0])
+                end_t = float(h[1])
+                h_title = "Short"
+            else:
+                start_t = float(h.get("start_time", 0.0))
+                end_t = float(h.get("end_time", start_t + 30.0))
+                h_title = h.get("title", "Short")
             clip_duration = end_t - start_t
 
             pct = 0.6 + (0.35 * (idx - 1) / total_clips)
             if on_progress:
-                on_progress(f"Rendering clip {idx}/{total_clips}: {h.get('title', 'Short')} ({clip_duration:.1f}s)...", pct)
+                on_progress(f"Rendering clip {idx}/{total_clips}: {h_title} ({clip_duration:.1f}s)...", pct)
 
             # Stage 1: Cut with ffmpeg
             cut_cmd = [
@@ -946,7 +952,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             pbar_filter = ""
             if progress_bar and progress_bar != "none":
                 pcolor = "red@0.95" if progress_bar == "red" else "yellow@0.95" if progress_bar == "yellow" else "cyan@0.95" if progress_bar == "cyan" else "white@0.95"
-                pbar_filter = f",drawbox=x=0:y=ih-14:w='iw*(t/{max(0.1, clip_duration):.3f})':h=14:color={pcolor}:t=fill"
+                pbar_filter = f",drawbox=x=0:y=ih-14:w='max(1, iw*min(1, t/{max(0.1, clip_duration):.3f}))':h=14:color={pcolor}:t=fill"
 
             filter_complex += f";{v_map}null{grade_filter}{pbar_filter}[v_styled]"
             v_map = "[v_styled]"
