@@ -1680,6 +1680,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/shorts/analyze-order":
                 body = self._read_body() or {}
                 self._handle_shorts_analyze_order(body)
+            elif path == "/api/shorts/prompt-to-reel":
+                body = self._read_body() or {}
+                self._handle_shorts_prompt_to_reel(body)
             elif path == "/api/voiceover/extract":
                 body = self._read_body() or {}
                 self._handle_voiceover_extract(body)
@@ -2301,6 +2304,39 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"ok": True, "short": entry})
         except Exception as e:
             self._json({"error": f"Manual edit failed: {e}"}, 500)
+
+    def _handle_shorts_prompt_to_reel(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+
+        topic = str(body.get("topic") or "").strip()
+        if not topic:
+            self._json({"error": "Topic is required to synthesize a reel"}, 400)
+            return
+
+        background_style = str(body.get("background_style") or "cyberpunk").strip()
+        voice = str(body.get("voice") or "en-US-ChristopherNeural").strip()
+        custom_script = str(body.get("custom_script") or "").strip()
+        caption_style = str(body.get("caption_style") or "hormozi").strip()
+        sticker = str(body.get("sticker") or "must_watch").strip()
+
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+
+        try:
+            entry = engine.synthesize_prompt_reel(
+                topic=topic,
+                background_style=background_style,
+                voice=voice,
+                custom_script=custom_script,
+                caption_style=caption_style,
+                sticker_badge=sticker,
+            )
+            self._json({"ok": True, "short": entry})
+        except Exception as e:
+            self._json({"error": f"Failed to synthesize prompt reel: {e}"}, 500)
+
 
 
 def serve(port=8765, max_port=8775):

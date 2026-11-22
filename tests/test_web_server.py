@@ -536,6 +536,33 @@ def test_voiceover_and_timeline_endpoints(server_module, tmp_path):
     assert sent_json[-1][1] in (400, 403, 404)
 
 
+def test_shorts_prompt_to_reel_endpoint(server_module, tmp_path, monkeypatch):
+    h = object.__new__(server_module.Handler)
+    h._output_dir = lambda: tmp_path
+
+    sent_json = []
+    h._json = lambda data, status=200: sent_json.append((data, status))
+
+    # 1. Missing topic -> 400
+    h._handle_shorts_prompt_to_reel({})
+    assert sent_json[-1][1] == 400
+
+    # 2. Valid topic with mocked synthesize_prompt_reel
+    mock_entry = {
+        "id": "prompt_reel_123",
+        "title": "Quantum Computing",
+        "duration": 7.0,
+        "filename": "prompt_reel_123.mp4",
+    }
+    monkeypatch.setattr(server_module.ShortsEngine, "synthesize_prompt_reel", lambda *args, **kw: mock_entry)
+
+    h._handle_shorts_prompt_to_reel({"topic": "Quantum Computing", "background_style": "cyberpunk"})
+    assert sent_json[-1][1] == 200
+    assert sent_json[-1][0]["ok"] is True
+    assert sent_json[-1][0]["short"]["id"] == "prompt_reel_123"
+
+
+
 def test_pulsecut_client_test_runner():
     """Verify that PulseCut's client-side ES modules pass their test suite."""
     proc = subprocess.run(

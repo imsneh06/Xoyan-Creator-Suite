@@ -563,6 +563,46 @@ def test_autoedit_clip_sanitization_and_ffmpeg_failure_diagnostics(tmp_path, mon
         assert "exit 4294967274" in str(err)
 
 
+def test_shorts_engine_synthesize_prompt_reel(tmp_path, monkeypatch):
+    engine = ShortsEngine(tmp_path)
+    import reel_autoedit
+    import shorts_engine
+
+    def mock_voiceover(text, voice, out_path):
+        out_path.write_bytes(b"\x00" * 2048)
+
+    monkeypatch.setattr(shorts_engine, "synthesize_voiceover_sync", mock_voiceover)
+    monkeypatch.setattr(engine, "enhance_voiceover_audio", lambda p, preset: p)
+    monkeypatch.setattr(reel_autoedit, "probe_duration", lambda p: 6.5)
+    monkeypatch.setattr(reel_autoedit, "transcribe_words", lambda path, model_size: [
+        {"word": "Focus", "start": 0.0, "end": 0.8},
+        {"word": "is", "start": 0.8, "end": 1.2},
+        {"word": "power", "start": 1.2, "end": 2.0},
+    ])
+    monkeypatch.setattr(reel_autoedit, "write_ass_captions", lambda clips, path, **kw: False)
+
+    def mock_run_cmd(cmd, **kw):
+        target = Path(cmd[-1])
+        target.write_bytes(b"\x00" * 1024)
+
+    monkeypatch.setattr(engine, "_run_cmd", mock_run_cmd)
+
+    entry = engine.synthesize_prompt_reel(
+        topic="Psychology of Focus",
+        background_style="cyberpunk",
+        voice="en-US-ChristopherNeural",
+    )
+
+    assert entry["id"].startswith("prompt_reel_")
+    assert "Focus" in entry["title"]
+    assert entry["duration"] == 6.5
+    assert entry["aspect_ratio"] == "9:16"
+    assert entry["layout"] == "prompt_reel"
+    assert entry["timeline_file"].endswith(".timeline.json")
+    assert (engine.shorts_dir / entry["timeline_file"]).exists()
+
+
+
 
 
 

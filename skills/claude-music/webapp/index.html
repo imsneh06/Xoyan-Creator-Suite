@@ -324,6 +324,119 @@
     border-radius: 4px;
     text-transform: uppercase;
   }
+
+  /* =========================================================================
+     Neural Prompt-to-Reel Studio Design System (VidCraft-Inspired Glassmorphism)
+     ========================================================================= */
+  .neural-studio-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 20px 45px -15px rgba(6, 182, 212, 0.15);
+  }
+  .neural-ambient-cyan {
+    position: absolute;
+    top: -80px;
+    left: 20%;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+  }
+  .neural-ambient-fuchsia {
+    position: absolute;
+    bottom: -80px;
+    right: 15%;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(217, 70, 239, 0.16) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+  }
+  .neural-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    color: #38bdf8;
+    margin-bottom: 12px;
+  }
+  .neural-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: #fff;
+    margin: 0 0 6px 0;
+  }
+  .neural-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 20px 0;
+    max-width: 680px;
+    line-height: 1.5;
+  }
+  .neural-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .neural-feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.25s ease;
+  }
+  .neural-feature-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(6, 182, 212, 0.35);
+    transform: translateY(-2px);
+  }
+  .neural-feature-card .feature-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .neural-feature-card .feature-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .neural-feature-card .feature-desc {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .neural-chip {
+    font-size: 11px;
+    padding: 3px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--fg);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+  .neural-chip:hover {
+    background: rgba(6, 182, 212, 0.2);
+    border-color: #06b6d4;
+    color: #38bdf8;
+  }
   .hero-title {
     font-size: 21px;
     font-weight: 800;
@@ -1533,6 +1646,96 @@
   </div><!-- /#view-music -->
 
   <div id="view-shorts" style="display:none; flex-direction:column; gap:20px;">
+    <!-- Neural Prompt-to-Reel Studio (VidCraft Inspired) -->
+    <div class="card neural-studio-card" id="neural-prompt-studio">
+      <div class="neural-ambient-cyan"></div>
+      <div class="neural-ambient-fuchsia"></div>
+
+      <!-- Header & Badges -->
+      <div class="neural-header">
+        <div class="neural-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Neural Prompt-to-Reel Studio</span>
+        </div>
+        <h2 class="neural-title">Synthesize Cinematic Short-Form Stories from a Single Prompt</h2>
+        <p class="neural-subtitle">Generate high-retention 9:16 vertical reels with AI neural voiceover, dynamic visual atmosphere, and animated Hormozi captions — 100% free, private & local.</p>
+      </div>
+
+      <!-- 3 Feature Cards (Prompt-to-Reel, Layered Audio, Motion Engine) -->
+      <div class="neural-features-grid">
+        <div class="neural-feature-card">
+          <div class="feature-icon">🪄</div>
+          <div class="feature-title">Prompt-to-Reel</div>
+          <div class="feature-desc">Turns an idea prompt or question into a complete viral script & hook.</div>
+        </div>
+        <div class="neural-feature-card">
+          <div class="feature-icon">🎚️</div>
+          <div class="feature-title">Layered Audio</div>
+          <div class="feature-desc">Broadcast neural narration + background music + audio ducking.</div>
+        </div>
+        <div class="neural-feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Motion Engine</div>
+          <div class="feature-desc">9:16 vertical canvas + animated Hormozi dynamic captions.</div>
+        </div>
+      </div>
+
+      <!-- Creation Form -->
+      <div class="neural-form-container">
+        <div class="field">
+          <label class="field-label" style="font-weight:700;">1. Video Topic or Concept</label>
+          <input type="text" id="neural-topic-input" class="title-input" placeholder="e.g. 5 Psychological Tricks for Focus, The Rise of Quantum Computing, Habit Compounding..." style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.12); font-size:14px; padding:10px 14px;">
+          <!-- Quick Suggestion Chips -->
+          <div class="neural-chips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+            <span class="neural-chip" onclick="setNeuralTopic('5 Psychological Tricks for High Focus')">🧠 Focus Psychology</span>
+            <span class="neural-chip" onclick="setNeuralTopic('The Brutal Truth About AI & Automation')">🤖 Future of AI</span>
+            <span class="neural-chip" onclick="setNeuralTopic('How Compounding Works in Daily Life')">📈 Compounding Habits</span>
+            <span class="neural-chip" onclick="setNeuralTopic('Why Most People Fail Their Goals')">🎯 Goal Execution</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:12px;">
+          <div class="field" style="margin:0;">
+            <label class="field-label">2. Visual Atmosphere / Scene Style</label>
+            <select id="neural-style-select" style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.12); font-size:13px; padding:8px 12px; width:100%;">
+              <option value="cyberpunk" selected>🌌 Cyberpunk Neon (Dark Obsidian & Cyan Glow)</option>
+              <option value="cosmic">✨ Cosmic Space (Deep Purple & Nebula Orbit)</option>
+              <option value="matrix">💻 Neon Matrix (Terminal Emerald & Green Code)</option>
+              <option value="vintage">📼 Retro Film Grain (Warm Sunset & Terracotta)</option>
+              <option value="minimal">⬛ Minimalist Obsidian (Pure High Contrast Monochrome)</option>
+            </select>
+          </div>
+
+          <div class="field" style="margin:0;">
+            <label class="field-label">3. Neural Voice Narrator (Edge-TTS)</label>
+            <select id="neural-voice-select" style="background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.12); font-size:13px; padding:8px 12px; width:100%;">
+              <option value="en-US-ChristopherNeural" selected>Christopher (Deep Authoritative Male)</option>
+              <option value="en-US-GuyNeural">Guy (Natural Conversational Male)</option>
+              <option value="en-US-JennyNeural">Jenny (Warm Expressive Female)</option>
+              <option value="en-GB-SoniaNeural">Sonia (British Sophisticated Female)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional Custom Script Expander -->
+        <details style="margin-top:12px; font-size:12px; color:var(--muted); cursor:pointer;">
+          <summary style="font-weight:600; color:var(--brand);">✍️ Custom Script Override (Optional)</summary>
+          <textarea id="neural-custom-script" placeholder="Leave blank to auto-generate a viral hook & script, or type your own custom narrative speech here..." style="width:100%; min-height:80px; margin-top:8px; background:rgba(15,23,42,0.7); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; padding:8px 12px; font-family:inherit; font-size:12px;"></textarea>
+        </details>
+
+        <!-- Action Button -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-top:16px;">
+          <button type="button" class="btn-primary" id="btn-synthesize-prompt-reel" style="padding:10px 24px; font-size:14px; font-weight:700; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#030712; border:none; display:inline-flex; align-items:center; gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span id="btn-synthesize-prompt-reel-label">✨ Synthesize 9:16 Reel with Voice & Captions</span>
+          </button>
+          <div id="neural-status-hint" class="subtext" style="font-size:12px; color:var(--muted); margin:0;">
+            Includes word-level Hormozi captions & multi-track timeline export
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Shorts Generator Card -->
     <div class="card">
       <h2>Create Vertical Shorts & Reels</h2>
@@ -3498,6 +3701,71 @@ function populateMusicForShorts() {
     }
     selCombine.value = currC;
   }
+}
+
+// Neural Prompt-to-Reel Studio Wiring
+function setNeuralTopic(topic) {
+  const el = $('neural-topic-input');
+  if (el) {
+    el.value = topic;
+    el.focus();
+  }
+}
+
+if ($('btn-synthesize-prompt-reel')) {
+  $('btn-synthesize-prompt-reel').onclick = async () => {
+    const topic = ($('neural-topic-input') ? $('neural-topic-input').value.trim() : '');
+    if (!topic) {
+      showError('Please enter a video topic or click one of the suggestion chips.');
+      if ($('neural-topic-input')) $('neural-topic-input').focus();
+      return;
+    }
+
+    const background_style = $('neural-style-select') ? $('neural-style-select').value : 'cyberpunk';
+    const voice = $('neural-voice-select') ? $('neural-voice-select').value : 'en-US-ChristopherNeural';
+    const custom_script = $('neural-custom-script') ? $('neural-custom-script').value.trim() : '';
+
+    const btn = $('btn-synthesize-prompt-reel');
+    const lbl = $('btn-synthesize-prompt-reel-label');
+    const hint = $('neural-status-hint');
+
+    btn.disabled = true;
+    lbl.innerHTML = '<span class="spinner"></span> Synthesizing Neural Reel...';
+    if (hint) hint.textContent = 'Generating viral script, neural voiceover, visual canvas & Hormozi captions...';
+    showError('Synthesizing reel: generating voiceover, 9:16 motion canvas & dynamic subtitles...');
+
+    try {
+      const res = await api('/api/shorts/prompt-to-reel', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          topic,
+          background_style,
+          voice,
+          custom_script,
+          caption_style: 'hormozi',
+          sticker: 'must_watch'
+        })
+      });
+
+      if (res.ok && res.short) {
+        showError(`✨ Successfully synthesized reel: "${res.short.title}"!`);
+        await refreshShortsLibrary();
+        loadShort(res.short);
+        if (hint) hint.textContent = '✨ Ready to preview, edit in PulseCut Studio, or download!';
+        const player = $('shorts-player-card');
+        if (player) player.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        throw new Error(res.error || 'Synthesis failed');
+      }
+    } catch (err) {
+      showError('Prompt reel synthesis failed: ' + err.message);
+      if (hint) hint.textContent = 'Synthesis error: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      lbl.textContent = '✨ Synthesize 9:16 Reel with Voice & Captions';
+    }
+  };
 }
 
 // File browse & upload for offline videos
