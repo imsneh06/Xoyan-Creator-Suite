@@ -433,7 +433,7 @@ def test_live_server_smoke(server_module, tmp_path, monkeypatch):
         assert status == 200 and len(json.loads(body)["genres"]) >= 20
 
         status, body = get("/")
-        assert status == 200 and b"Claude Music" in body
+        assert status == 200 and (b"Xoyan Studio" in body or b"Claude Music" in body)
 
         # Unconfigured generate is refused with 503.
         req = urllib.request.Request(
