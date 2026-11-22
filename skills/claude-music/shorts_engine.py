@@ -240,6 +240,53 @@ class ShortsEngine:
         except Exception as e:
             print(f"[shorts_engine] failed to save library: {e}", file=sys.stderr)
 
+    def delete_short(self, clip_id: str) -> bool:
+        """Permanently delete a short, its video file, thumbnail, EDL, and remove from library."""
+        if not self.meta_file.exists():
+            return False
+        try:
+            with self.meta_file.open(encoding="utf-8-sig") as f:
+                lib = json.load(f)
+        except Exception:
+            lib = []
+
+        entry = next((e for e in lib if e.get("id") == clip_id), None)
+        if not entry:
+            return False
+
+        remaining = [e for e in lib if e.get("id") != clip_id]
+        try:
+            with self.meta_file.open("w", encoding="utf-8") as f:
+                json.dump(remaining, f, indent=2)
+        except Exception as e:
+            print(f"[shorts_engine] Error updating library on delete: {e}", file=sys.stderr)
+
+        # Remove video file
+        fn = entry.get("filename")
+        if fn:
+            p = self.shorts_dir / fn
+            with contextlib.suppress(Exception):
+                if p.exists():
+                    p.unlink()
+
+        # Remove thumbnail
+        thumb = entry.get("thumbnail")
+        if thumb:
+            p = self.shorts_dir / thumb
+            with contextlib.suppress(Exception):
+                if p.exists():
+                    p.unlink()
+
+        # Remove edl
+        edl = entry.get("edl_file")
+        if edl:
+            p = self.shorts_dir / edl
+            with contextlib.suppress(Exception):
+                if p.exists():
+                    p.unlink()
+
+        return True
+
     def clean_temp_files(self):
         """Purge all temporary artifacts from memory and disk."""
         for p in self.tracked_temp_files:
@@ -1560,6 +1607,254 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         ]
         self._run_cmd(cmd, is_cancelled=is_cancelled)
         return output_path
+
+    def manual_edit_short(
+        self,
+        source_path: Path,
+        start_time: float = 0.0,
+        end_time: float | None = None,
+        aspect_ratio: str = "9:16",
+        video_volume: float = 1.0,
+        mute_video: bool = False,
+        bg_music_path: Path | None = None,
+        music_volume: float = 0.35,
+        mute_music: bool = False,
+        effect: str = "clean",
+        sticker: str = "",
+        burn_captions: bool = True,
+        caption_style: str = "hormozi",
+        quality: str = "1080p_standard",
+        title: str = "Instagram Edit Short",
+        on_progress: Callable[[str, float], None] | None = None,
+        is_cancelled: Callable[[], bool] | None = None,
+    ) -> dict[str, Any]:
+        """Interactive Instagram-style reel editor: cutter, crop, audio volume mixer, custom music, stickers, visual effects, and quality export."""
+        if not source_path.exists():
+            raise FileNotFoundError(f"Source video {source_path} does not exist.")
+
+        ffmpeg_bin = get_ffmpeg_bin()
+        ts = int(time.time())
+        clean_title = re.sub(r"[^\w\-]", "_", title.lower())[:24]
+        clip_id = f"edit_{ts}_{clean_title}"
+
+        final_mp4 = self.shorts_dir / f"{clip_id}.mp4"
+        thumb_jpg = self.shorts_dir / f"{clip_id}.jpg"
+        ass_path = self.shorts_dir / f"{clip_id}.ass"
+        self.tracked_temp_files.append(ass_path)
+
+        # 1. Trimming bounds
+        total_src_dur = probe_duration(source_path)
+        start_t = max(0.0, float(start_time or 0.0))
+        end_t = total_src_dur if end_time is None or float(end_time) <= start_t else min(total_src_dur, float(end_time))
+        clip_dur = max(0.5, end_t - start_t)
+
+        if on_progress:
+            on_progress(f"Configuring manual edit for '{title}' ({clip_dur:.1f}s)...", 0.15)
+
+        # 2. Dimensions & Quality Settings
+        quality_map = {
+            "720p": {"base_w": 720, "base_h": 1280, "crf": 23, "bv": "4M", "ba": "192k"},
+            "1080p_standard": {"base_w": 1080, "base_h": 1920, "crf": 22, "bv": "8M", "ba": "256k"},
+            "1080p_ultra": {"base_w": 1080, "base_h": 1920, "crf": 18, "bv": "12M", "ba": "320k"},
+            "4k": {"base_w": 2160, "base_h": 3840, "crf": 16, "bv": "25M", "ba": "320k"},
+        }
+        q_cfg = quality_map.get(quality, quality_map["1080p_standard"])
+
+        ratio = str(aspect_ratio).strip().lower()
+        if ratio == "1:1":
+            target_w = q_cfg["base_w"]
+            target_h = q_cfg["base_w"]
+        elif ratio == "4:5":
+            target_w = q_cfg["base_w"]
+            target_h = int(q_cfg["base_w"] * 5 / 4)
+            if target_h % 2 != 0:
+                target_h += 1
+        elif ratio == "16:9":
+            target_w = q_cfg["base_h"] if q_cfg["base_h"] > q_cfg["base_w"] else int(q_cfg["base_w"] * 16 / 9)
+            target_h = q_cfg["base_w"]
+            if target_w % 2 != 0:
+                target_w += 1
+            if target_h % 2 != 0:
+                target_h += 1
+        else:  # 9:16
+            target_w = q_cfg["base_w"]
+            target_h = q_cfg["base_h"]
+
+        # 3. Video Filters (Crop, Aspect Ratio, Visual Effects)
+        v_filters = [
+            f"scale={target_w}:{target_h}:force_original_aspect_ratio=increase",
+            f"crop={target_w}:{target_h}",
+            "setsar=1",
+            "fps=30",
+            "format=yuv420p"
+        ]
+
+        # Instagram visual effects
+        eff = str(effect).lower().strip()
+        if eff == "vhs":
+            v_filters.append("curves=vintage,noise=c1s=8:c0s=8:allf=t,unsharp=5:5:0.8")
+        elif eff == "grain":
+            v_filters.append("noise=alls=14:allf=t,colorbalance=rs=0.08:gs=0.02:bs=-0.05,eq=contrast=1.06:saturation=1.05")
+        elif eff == "glow":
+            v_filters.append("gblur=sigma=1.2,eq=contrast=1.10:brightness=0.02:saturation=1.15")
+        elif eff == "teal_orange":
+            v_filters.append("colorbalance=rs=-0.05:gs=0.0:bs=0.10:rh=0.08:bh=-0.06,eq=contrast=1.12:saturation=1.1")
+        elif eff == "bw":
+            v_filters.append("hue=s=0,eq=contrast=1.25:brightness=-0.02")
+        elif eff == "zoom":
+            v_filters.append(f"zoompan=z='min(zoom+0.001,1.1)':d=125:s={target_w}x{target_h}:fps=30")
+
+        # 4. Stickers & Captions (via ASS generator)
+        sticker_labels = {
+            "must_watch": "🔥 MUST WATCH",
+            "wait_for_it": "😱 WAIT FOR IT",
+            "breaking": "🚨 BREAKING",
+            "life_hack": "💡 LIFE HACK",
+            "secret": "🤫 TOP SECRET",
+            "part1": "⚠️ PART 1",
+            "sound_on": "🔊 SOUND ON",
+            "100": "💯 100%",
+            "new": "⭐ NEW",
+            "protip": "🎯 PRO TIP",
+        }
+        sticker_badge_text = sticker_labels.get(sticker, sticker.strip() if sticker else "")
+
+        if burn_captions or sticker_badge_text:
+            transcript = {}
+            if burn_captions:
+                try:
+                    transcript = self.transcribe(source_path)
+                except Exception as e:
+                    print(f"[shorts_engine] transcribe in manual edit error: {e}", file=sys.stderr)
+            created_ass = self.generate_ass_subtitles(
+                transcript,
+                start_t,
+                end_t,
+                ass_path,
+                style=caption_style,
+                sticker_badge=sticker_badge_text,
+                hide_spoken_captions=(not burn_captions),
+            )
+            if created_ass and ass_path.exists():
+                clean_ass = str(ass_path.resolve()).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
+                v_filters.append(f"ass=filename='{clean_ass}'")
+
+        # Outro fade for video
+        if clip_dur > 1.5:
+            fade_v_start = max(0.1, clip_dur - 0.35)
+            v_filters.append(f"fade=t=out:st={fade_v_start:.3f}:d=0.35")
+
+        v_chain = ",".join(v_filters)
+
+        # 5. Audio Mixing & Volume Adjusters
+        src_has_audio = has_audio_stream(source_path) and not mute_video and float(video_volume) > 0.001
+        has_music = bool(bg_music_path and bg_music_path.exists() and not mute_music and float(music_volume) > 0.001)
+
+        a_fade = ""
+        if clip_dur > 1.5:
+            fade_a_start = max(0.1, clip_dur - 0.50)
+            a_fade = f",afade=t=out:st={fade_a_start:.3f}:d=0.50"
+
+        cmd_inputs = [
+            ffmpeg_bin, "-y", "-loglevel", "error",
+            "-ss", f"{start_t:.3f}",
+            "-t", f"{clip_dur:.3f}",
+            "-i", str(source_path.resolve()),
+        ]
+
+        if has_music:
+            cmd_inputs.extend(["-stream_loop", "-1", "-i", str(bg_music_path.resolve())])
+
+        parts = []
+        parts.append(f"[0:v]{v_chain}[vout]")
+
+        if src_has_audio and has_music:
+            v_vol = float(video_volume)
+            m_vol = float(music_volume)
+            parts.append(
+                f"[0:a]volume={v_vol:.2f},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[va];"
+                f"[1:a]volume={m_vol:.2f},atrim=0:{clip_dur:.3f},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[ma];"
+                f"[va][ma]amix=inputs=2:duration=first:dropout_transition=2,"
+                f"loudnorm=I=-14:TP=-1:LRA=11{a_fade}[aout]"
+            )
+            a_map = "[aout]"
+        elif src_has_audio and not has_music:
+            v_vol = float(video_volume)
+            parts.append(
+                f"[0:a]volume={v_vol:.2f},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
+                f"loudnorm=I=-14:TP=-1:LRA=11{a_fade}[aout]"
+            )
+            a_map = "[aout]"
+        elif not src_has_audio and has_music:
+            m_vol = float(music_volume)
+            parts.append(
+                f"[1:a]volume={m_vol:.2f},atrim=0:{clip_dur:.3f},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
+                f"loudnorm=I=-14:TP=-1:LRA=11{a_fade}[aout]"
+            )
+            a_map = "[aout]"
+        else:
+            # Silent audio track
+            parts.append(
+                f"aevalsrc=0:d={clip_dur:.3f}:s=44100,aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo{a_fade}[aout]"
+            )
+            a_map = "[aout]"
+
+        filter_complex = ";".join(parts)
+
+        render_cmd = cmd_inputs + [
+            "-filter_complex", filter_complex,
+            "-map", "[vout]",
+            "-map", a_map,
+            "-c:v", "libx264", "-preset", "fast", "-crf", str(q_cfg["crf"]),
+            "-b:v", q_cfg["bv"],
+            "-c:a", "aac", "-b:a", q_cfg["ba"],
+            "-t", f"{clip_dur:.3f}",
+            str(final_mp4.resolve())
+        ]
+
+        if on_progress:
+            on_progress(f"Encoding '{title}' at {quality} with Instagram edits...", 0.60)
+
+        self._run_cmd(render_cmd, is_cancelled=is_cancelled)
+
+        # Generate thumbnail
+        thumb_cmd = [
+            ffmpeg_bin, "-y", "-loglevel", "error",
+            "-ss", f"{min(1.0, clip_dur / 2):.2f}",
+            "-i", str(final_mp4.resolve()),
+            "-vframes", "1",
+            "-q:v", "2",
+            str(thumb_jpg.resolve())
+        ]
+        self._run_cmd(thumb_cmd, check=False)
+
+        # Cleanup ASS temp
+        with contextlib.suppress(Exception):
+            if ass_path.exists():
+                ass_path.unlink()
+
+        entry = {
+            "id": clip_id,
+            "title": title,
+            "duration": round(clip_dur, 1),
+            "score": 95,
+            "hook_sentence": f"Edited with Instagram Edits ({aspect_ratio}, {quality})",
+            "virality_reason": "Custom trimmed, volume mixed, visual styled & mastered.",
+            "start_time": round(start_t, 2),
+            "end_time": round(end_t, 2),
+            "filename": final_mp4.name,
+            "thumbnail": thumb_jpg.name if thumb_jpg.exists() else None,
+            "created_at": time.time(),
+            "aspect_ratio": aspect_ratio,
+            "layout": "manual_edit",
+            "captions": burn_captions,
+            "source_file": source_path.name,
+            "quality": quality,
+            "effect": effect,
+            "sticker": sticker_badge_text,
+        }
+        self.save_library_entry(entry)
+        return entry
 
     def generate_viral_metadata(
         self,

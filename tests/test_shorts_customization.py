@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -329,5 +330,123 @@ def test_shorts_engine_enhance_caption_text(tmp_path):
     grammar_res = engine.enhance_caption_text(grammar_raw, mode="grammar")
     assert "um" not in grammar_res.lower().split()
     assert "uh" not in grammar_res.lower().split()
+
+
+def test_shorts_engine_delete_short(tmp_path):
+    engine = ShortsEngine(tmp_path)
+    clip_id = "test_clip_123"
+    vid_file = engine.shorts_dir / f"{clip_id}.mp4"
+    thumb_file = engine.shorts_dir / f"{clip_id}.jpg"
+    edl_file = engine.shorts_dir / f"{clip_id}.edl.json"
+    vid_file.write_text("dummy video")
+    thumb_file.write_text("dummy thumb")
+    edl_file.write_text("dummy edl")
+
+    entry = {
+        "id": clip_id,
+        "title": "Test Short",
+        "filename": vid_file.name,
+        "thumbnail": thumb_file.name,
+        "edl_file": edl_file.name,
+        "duration": 15.0,
+    }
+    engine.save_library_entry(entry)
+    assert len(engine.load_library()) == 1
+
+    # Delete
+    res = engine.delete_short(clip_id)
+    assert res is True
+    assert not vid_file.exists()
+    assert not thumb_file.exists()
+    assert not edl_file.exists()
+    assert len(engine.load_library()) == 0
+
+    # Non-existent
+    assert engine.delete_short("non_existent_id") is False
+
+
+def test_shorts_engine_manual_edit_short(tmp_path, monkeypatch):
+    engine = ShortsEngine(tmp_path)
+    dummy_src = tmp_path / "source.mp4"
+    dummy_src.write_text("video")
+
+    monkeypatch.setattr("skills.claude-music.shorts_engine.probe_duration", lambda p: 20.0)
+    monkeypatch.setattr("skills.claude-music.shorts_engine.has_audio_stream", lambda p: True)
+
+    recorded_cmds = []
+
+    def mock_run_cmd(cmd, **kwargs):
+        recorded_cmds.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(engine, "_run_cmd", mock_run_cmd)
+
+    entry = engine.manual_edit_short(
+        source_path=dummy_src,
+        start_time=2.0,
+        end_time=12.0,
+        aspect_ratio="1:1",
+        video_volume=1.2,
+        mute_video=False,
+        bg_music_path=None,
+        music_volume=0.0,
+        mute_music=True,
+        effect="vhs",
+        sticker="must_watch",
+        burn_captions=False,
+        quality="1080p_ultra",
+        title="Test Square VHS Short",
+    )
+
+    assert entry["id"].startswith("edit_")
+    assert entry["aspect_ratio"] == "1:1"
+    assert entry["duration"] == 10.0
+    assert entry["quality"] == "1080p_ultra"
+    assert entry["effect"] == "vhs"
+    assert "MUST WATCH" in entry["sticker"]
+    assert entry["captions"] is False
+
+    # Check FFmpeg command arguments
+    found_render = False
+    for cmd in recorded_cmds:
+        joined = " ".join(cmd)
+        if "-filter_complex" in joined:
+            found_render = True
+            assert "crop=1080:1080" in joined
+            assert "curves=vintage" in joined
+            assert "-crf 18" in joined
+            assert "-b:v 12M" in joined
+    assert found_render is True
+
+
+def test_server_shorts_delete_and_manual_edit(tmp_path):
+    sys.path.insert(0, str(SKILL_DIR / "webapp"))
+    import server
+
+    h = object.__new__(server.Handler)
+    h._output_dir = lambda: tmp_path
+
+    sent_json = []
+    h._json = lambda data, status=200: sent_json.append((data, status))
+
+    # 1. Test delete with missing clip_id
+    h._handle_shorts_delete({})
+    assert sent_json[-1][1] == 400
+
+    # 2. Test delete with valid clip_id
+    engine = ShortsEngine(tmp_path)
+    (engine.shorts_dir / "none.mp4").write_text("dummy")
+    engine.save_library_entry({"id": "clip_to_del", "title": "Del", "filename": "none.mp4"})
+    assert len(engine.load_library()) == 1
+
+    h._handle_shorts_delete({"clip_id": "clip_to_del"})
+    assert sent_json[-1][0]["ok"] is True
+    assert len(engine.load_library()) == 0
+
+    # 3. Test manual edit missing source
+    h._handle_shorts_manual_edit({"clip_id": "non_existent"})
+    assert sent_json[-1][1] == 404
+
+
 
 

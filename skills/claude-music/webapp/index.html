@@ -884,6 +884,115 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
 
+  .short-card-delete {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 6;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(18, 18, 17, 0.85);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #ef4444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .short-card-delete:hover {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+    transform: scale(1.1);
+  }
+
+  .ig-edits-panel {
+    background: var(--well);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 14px;
+  }
+  .ig-section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .ig-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .ig-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--brand);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ig-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ig-pill {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--fg);
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .ig-pill:hover {
+    border-color: var(--accent);
+  }
+  .ig-pill.active {
+    background: var(--brand);
+    color: var(--brand-contrast);
+    border-color: var(--brand);
+    font-weight: 700;
+  }
+  .ig-vol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .ig-vol-slider {
+    flex: 1;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+  .ig-mute-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--fg);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .ig-mute-btn.active {
+    background: rgba(239, 68, 68, 0.18);
+    color: #ef4444;
+    border-color: #ef4444;
+  }
+
   .combine-chip {
     display: inline-flex;
     align-items: center;
@@ -1527,7 +1636,10 @@
         </div>
 
         <div class="field" style="flex-direction:column; align-items:flex-start;">
-          <label class="field-label">Dialogue Captions</label>
+          <label class="field-label" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" id="shorts-burn-captions-check" checked style="accent-color:var(--brand); cursor:pointer;">
+            <span>Burn Dynamic Captions</span>
+          </label>
           <select id="shorts-captions">
             <option value="hormozi" selected>🔥 Animated Hormozi (Bold Highlight)</option>
             <option value="clean">✨ Clean Minimal White</option>
@@ -1677,42 +1789,184 @@
             <button class="speed-pill" data-speed="2">2x</button>
           </div>
 
-          <!-- Precision Clip Trimmer -->
-          <div style="margin-top:16px; padding:12px 14px; background:var(--well); border:1px solid var(--line); border-radius:8px;">
-            <div class="eyebrow" style="margin-bottom:8px;">Interactive Clip Trimmer & Elements</div>
-            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-              <div class="field">
-                <label class="field-label" style="margin:0;">Start:</label>
-                <button class="btn btn-icon" id="trim-start-minus" style="padding:2px 8px;">-1s</button>
-                <input type="number" id="trim-start" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
-                <button class="btn btn-icon" id="trim-start-plus" style="padding:2px 8px;">+1s</button>
-              </div>
-              <div class="field">
-                <label class="field-label" style="margin:0;">End:</label>
-                <button class="btn btn-icon" id="trim-end-minus" style="padding:2px 8px;">-1s</button>
-                <input type="number" id="trim-end" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
-                <button class="btn btn-icon" id="trim-end-plus" style="padding:2px 8px;">+1s</button>
-              </div>
-              <div class="field">
-                <label class="field-label" style="margin:0;">Captions:</label>
-                <select id="trim-captions" style="padding:3px 8px; font-size:12px;">
-                  <option value="hormozi" selected>Hormozi</option>
-                  <option value="clean">Clean White</option>
-                  <option value="none">Hide (No Captions)</option>
-                </select>
-              </div>
-              <button class="btn" id="btn-recut-short" style="margin-left:auto; font-weight:600;">Re-cut Clip</button>
+          <!-- Instagram Edits Manual Editing Panel -->
+          <div class="ig-edits-panel" id="manual-reel-editor-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span class="eyebrow" style="color:var(--brand); font-size:12px; margin:0; display:flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Instagram Edits · Manual Reel Studio
+              </span>
+              <span id="manual-edit-duration-badge" class="mono" style="font-size:11px; background:var(--card); padding:2px 8px; border-radius:4px; border:1px solid var(--line); color:var(--accent);">0.0s</span>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
-              <input class="title-input" id="trim-custom-text" placeholder="Add custom hook banner (e.g. PART 2 or MUST WATCH)..." style="flex:1; font-size:12px; padding:4px 8px;">
-            </div>
-          </div>
 
-          <div class="player-controls" style="margin-top:16px; gap:8px;">
-            <a class="btn btn-primary" id="shorts-download-link" download>Download Short</a>
-            <button class="btn" id="shorts-reroll-card-btn" title="Generate different clips from the same video">🎲 Different Clips</button>
-            <button class="btn" id="shorts-metadata-btn">Viral Metadata & Hashtags</button>
-            <button class="btn" id="shorts-mix-action-btn">Add AI Music</button>
+            <!-- 1. Clip Cutter & Crop Section -->
+            <div class="ig-section">
+              <div class="ig-section-title">
+                <span>✂️ Clip Cutter & 📐 Crop Ratio</span>
+                <span style="font-size:10px; color:var(--muted); text-transform:none;">In/Out frame-accurate cut</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div class="field" style="margin:0;">
+                  <label class="field-label" style="margin:0;">Start:</label>
+                  <button type="button" class="btn btn-icon" id="trim-start-minus" style="padding:2px 6px;">-0.5s</button>
+                  <input type="number" id="trim-start" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
+                  <button type="button" class="btn btn-icon" id="trim-start-plus" style="padding:2px 6px;">+0.5s</button>
+                  <button type="button" class="btn" id="trim-start-current" title="Set to current video timestamp" style="font-size:10px; padding:2px 6px;">⏱️ Current</button>
+                </div>
+                <div class="field" style="margin:0;">
+                  <label class="field-label" style="margin:0;">End:</label>
+                  <button type="button" class="btn btn-icon" id="trim-end-minus" style="padding:2px 6px;">-0.5s</button>
+                  <input type="number" id="trim-end" step="0.5" min="0" style="width:65px; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:3px 6px; font-family:monospace; font-size:12px;">
+                  <button type="button" class="btn btn-icon" id="trim-end-plus" style="padding:2px 6px;">+0.5s</button>
+                  <button type="button" class="btn" id="trim-end-current" title="Set to current video timestamp" style="font-size:10px; padding:2px 6px;">⏱️ Current</button>
+                </div>
+              </div>
+              <!-- Aspect Ratio Pills -->
+              <div style="margin-top:10px;">
+                <span class="field-label" style="display:block; margin-bottom:4px;">Crop & Aspect Ratio:</span>
+                <div class="ig-pill-group" id="manual-ratio-pills">
+                  <button type="button" class="ig-pill active" data-ratio="9:16">📱 9:16 Vertical (Reels/TikTok)</button>
+                  <button type="button" class="ig-pill" data-ratio="1:1">⬛ 1:1 Square (Feed)</button>
+                  <button type="button" class="ig-pill" data-ratio="4:5">🖼️ 4:5 Portrait (IG Post)</button>
+                  <button type="button" class="ig-pill" data-ratio="16:9">🖥️ 16:9 Landscape</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Audio & Volume Mixer + Custom Music -->
+            <div class="ig-section">
+              <div class="ig-section-title">
+                <span>🎚️ Audio Mixer & Custom Music</span>
+                <span style="font-size:10px; color:var(--muted); text-transform:none;">Dual-track volume & mute</span>
+              </div>
+              <!-- Original Video Audio -->
+              <div style="margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+                  <span>Original Video Audio</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="manual-video-vol-label" class="mono" style="font-size:11px; color:var(--accent);">100%</span>
+                    <button type="button" class="ig-mute-btn" id="manual-mute-video-btn">
+                      <span id="manual-mute-video-text">🔊 Unmuted</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="ig-vol-row">
+                  <input type="range" id="manual-video-vol-slider" class="ig-vol-slider" min="0" max="200" value="100">
+                </div>
+              </div>
+              <!-- Background / Custom Music Track -->
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+                  <span>Background / Custom Music</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="manual-music-vol-label" class="mono" style="font-size:11px; color:var(--accent);">35%</span>
+                    <button type="button" class="ig-mute-btn" id="manual-mute-music-btn">
+                      <span id="manual-mute-music-text">🔊 Unmuted</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="ig-vol-row">
+                  <input type="range" id="manual-music-vol-slider" class="ig-vol-slider" min="0" max="100" value="35">
+                </div>
+                <!-- Custom Music Upload & Selection Button -->
+                <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                  <label class="btn" style="cursor:pointer; font-size:12px; padding:4px 10px; display:inline-flex; align-items:center; gap:6px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <span>+ Add Custom Music / Audio Track</span>
+                    <input type="file" id="manual-custom-music-file" accept="audio/*,.mp3,.wav,.m4a,.flac" style="display:none;">
+                  </label>
+                  <select id="manual-music-select" style="font-size:12px; padding:4px 8px; max-width:200px; flex:1;">
+                    <option value="">No background music</option>
+                  </select>
+                  <button type="button" class="btn" id="manual-clear-music-btn" style="display:none; padding:4px 8px; font-size:11px; color:#ef4444;" title="Remove music track">✕ Remove</button>
+                </div>
+                <div id="manual-music-status" class="mono" style="font-size:11px; color:var(--muted); margin-top:4px;"></div>
+              </div>
+            </div>
+
+            <!-- 3. Stickers & Visual Effects (like Instagram Edits) -->
+            <div class="ig-section">
+              <div class="ig-section-title">
+                <span>🏷️ Instagram Stickers & Effects</span>
+                <span style="font-size:10px; color:var(--muted); text-transform:none;">Viral hooks & color grading</span>
+              </div>
+              <!-- Stickers Badges -->
+              <div style="margin-bottom:10px;">
+                <span class="field-label" style="display:block; margin-bottom:4px;">Stickers:</span>
+                <div class="ig-pill-group" id="manual-sticker-pills">
+                  <button type="button" class="ig-pill active" data-sticker="">None</button>
+                  <button type="button" class="ig-pill" data-sticker="must_watch">🔥 MUST WATCH</button>
+                  <button type="button" class="ig-pill" data-sticker="wait_for_it">😱 WAIT FOR IT</button>
+                  <button type="button" class="ig-pill" data-sticker="breaking">🚨 BREAKING</button>
+                  <button type="button" class="ig-pill" data-sticker="life_hack">💡 LIFE HACK</button>
+                  <button type="button" class="ig-pill" data-sticker="secret">🤫 TOP SECRET</button>
+                  <button type="button" class="ig-pill" data-sticker="part1">⚠️ PART 1</button>
+                  <button type="button" class="ig-pill" data-sticker="sound_on">🔊 SOUND ON</button>
+                  <button type="button" class="ig-pill" data-sticker="100">💯 100%</button>
+                  <button type="button" class="ig-pill" data-sticker="new">⭐ NEW</button>
+                  <button type="button" class="ig-pill" data-sticker="protip">🎯 PRO TIP</button>
+                </div>
+              </div>
+              <!-- Visual Effects -->
+              <div>
+                <span class="field-label" style="display:block; margin-bottom:4px;">Visual Effects:</span>
+                <div class="ig-pill-group" id="manual-effect-pills">
+                  <button type="button" class="ig-pill active" data-effect="clean">✨ Clean</button>
+                  <button type="button" class="ig-pill" data-effect="vhs">📼 Retro VHS</button>
+                  <button type="button" class="ig-pill" data-effect="grain">🎞️ Film Grain</button>
+                  <button type="button" class="ig-pill" data-effect="glow">💫 Soft Glow</button>
+                  <button type="button" class="ig-pill" data-effect="teal_orange">🎬 Teal & Orange</button>
+                  <button type="button" class="ig-pill" data-effect="bw">🖤 B&W Noir</button>
+                  <button type="button" class="ig-pill" data-effect="zoom">🔍 Dynamic Zoom</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Captions Checkbox & Download Quality Options -->
+            <div class="ig-section">
+              <div class="ig-section-title">
+                <span>💬 Captions & 📥 Download Quality</span>
+                <span style="font-size:10px; color:var(--muted); text-transform:none;">Resolution & bitrates</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:600;">
+                    <input type="checkbox" id="manual-burn-captions-check" checked style="accent-color:var(--brand); cursor:pointer;">
+                    <span>Burn Dynamic Captions</span>
+                  </label>
+                  <select id="manual-caption-style" style="font-size:12px; padding:3px 8px;">
+                    <option value="hormozi" selected>Hormozi (Bold Highlight)</option>
+                    <option value="clean">Clean Minimal White</option>
+                  </select>
+                </div>
+                <div class="field" style="margin:0;">
+                  <label class="field-label" style="margin:0;">Export Quality:</label>
+                  <select id="manual-quality-select" style="font-size:12px; padding:4px 8px; font-weight:600;">
+                    <option value="1080p_standard" selected>1080p Standard (8 Mbps · Recommended)</option>
+                    <option value="1080p_ultra">1080p Ultra HD (12 Mbps · Viral Master)</option>
+                    <option value="720p">720p Mobile Fast (4 Mbps · Quick Render)</option>
+                    <option value="4k">4K Master Pro (25 Mbps · Ultra Cinema)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Action Buttons -->
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+              <button class="btn-primary" id="btn-apply-manual-edit" style="padding:7px 18px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                <span id="btn-apply-manual-edit-label">✨ Apply Manual Edits & Re-Render</span>
+              </button>
+              <a class="btn" id="shorts-download-link" download style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Short
+              </a>
+              <button class="btn" id="shorts-metadata-btn">Viral Metadata</button>
+              <button class="btn" id="shorts-reroll-card-btn" title="Generate different clips from the same video">🎲 Different Clips</button>
+              <button class="btn" id="btn-delete-active-short" style="margin-left:auto; color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
+                🗑️ Delete Short
+              </button>
+            </div>
           </div>
 
           <!-- Edit Decision List (EDL) viewer -->
@@ -3489,7 +3743,8 @@ async function triggerShortsGeneration(overrideFocus = null) {
   const clip_focus = $('shorts-clip-focus') ? $('shorts-clip-focus').value : 'top_hooks';
   const keyword = $('shorts-keyword') ? $('shorts-keyword').value.trim() : '';
   const rawCaptions = $('shorts-captions') ? $('shorts-captions').value : 'hormozi';
-  const captions = rawCaptions !== 'none';
+  const burnCheck = $('shorts-burn-captions-check');
+  const captions = (burnCheck ? burnCheck.checked : true) && rawCaptions !== 'none';
   const caption_style = rawCaptions === 'clean' ? 'clean' : 'hormozi';
   const custom_text = $('shorts-custom-text') ? $('shorts-custom-text').value.trim() : '';
   const custom_text_pos = $('shorts-custom-text-pos') ? $('shorts-custom-text-pos').value : 'top';
@@ -3675,6 +3930,31 @@ function renderShortsLibrary() {
       badge.textContent = '#' + (orderIdx + 1);
       thumbBox.appendChild(badge);
     }
+
+    // Delete short button on thumb
+    const delCardBtn = document.createElement('div');
+    delCardBtn.className = 'short-card-delete';
+    delCardBtn.title = 'Delete short from disk';
+    delCardBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    delCardBtn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm(`Permanently delete "${item.title || 'this short'}"?`)) return;
+      try {
+        await api('/api/shorts/delete', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({clip_id: item.id}),
+        });
+        showError(`Deleted ${item.title || 'short'}.`);
+        if (shortsState.current && shortsState.current.id === item.id) {
+          $('shorts-player-card').style.display = 'none';
+        }
+        await refreshShortsLibrary();
+      } catch (err) {
+        showError('Delete failed: ' + err.message);
+      }
+    };
+    thumbBox.appendChild(delCardBtn);
 
     const info = document.createElement('div');
     info.className = 'short-card-info';
@@ -3872,80 +4152,291 @@ function loadShort(item) {
     edlBox.style.display = 'none';
   }
 
-  // Initialize Clip Trimmer inputs
+  // Initialize Instagram Edits Studio State & Controls
+  let manualEditState = {
+    aspectRatio: item.aspect_ratio || '9:16',
+    videoVolume: 1.0,
+    muteVideo: false,
+    musicVolume: 0.35,
+    muteMusic: false,
+    effect: item.effect || 'clean',
+    sticker: item.sticker || '',
+  };
+
   const startVal = item.start_time !== undefined ? item.start_time : 0;
   const endVal = item.end_time !== undefined ? item.end_time : Math.round(item.duration || 30);
   $('trim-start').value = startVal;
   $('trim-end').value = endVal;
 
+  function updateManualDurationBadge() {
+    const s = Math.max(0, parseFloat($('trim-start').value || 0));
+    const e = Math.max(s + 0.1, parseFloat($('trim-end').value || 30));
+    const d = Math.max(0.1, e - s);
+    if ($('manual-edit-duration-badge')) {
+      $('manual-edit-duration-badge').textContent = d.toFixed(1) + 's';
+    }
+  }
+  updateManualDurationBadge();
+
+  $('trim-start').oninput = updateManualDurationBadge;
+  $('trim-end').oninput = updateManualDurationBadge;
+
   $('trim-start-minus').onclick = () => {
-    const v = Math.max(0, parseFloat($('trim-start').value || 0) - 1);
+    const v = Math.max(0, parseFloat($('trim-start').value || 0) - 0.5);
     $('trim-start').value = v.toFixed(1);
+    updateManualDurationBadge();
   };
   $('trim-start-plus').onclick = () => {
-    const v = parseFloat($('trim-start').value || 0) + 1;
+    const v = parseFloat($('trim-start').value || 0) + 0.5;
     $('trim-start').value = v.toFixed(1);
+    updateManualDurationBadge();
   };
   $('trim-end-minus').onclick = () => {
-    const v = Math.max(0, parseFloat($('trim-end').value || 0) - 1);
+    const v = Math.max(0, parseFloat($('trim-end').value || 0) - 0.5);
     $('trim-end').value = v.toFixed(1);
+    updateManualDurationBadge();
   };
   $('trim-end-plus').onclick = () => {
-    const v = parseFloat($('trim-end').value || 0) + 1;
+    const v = parseFloat($('trim-end').value || 0) + 0.5;
     $('trim-end').value = v.toFixed(1);
+    updateManualDurationBadge();
   };
+  if ($('trim-start-current')) {
+    $('trim-start-current').onclick = () => {
+      $('trim-start').value = Math.max(0, video.currentTime).toFixed(1);
+      updateManualDurationBadge();
+    };
+  }
+  if ($('trim-end-current')) {
+    $('trim-end-current').onclick = () => {
+      $('trim-end').value = Math.max(0, video.currentTime).toFixed(1);
+      updateManualDurationBadge();
+    };
+  }
 
-  // Re-cut short action
-  $('btn-recut-short').onclick = async () => {
-    const s = parseFloat($('trim-start').value);
-    const e = parseFloat($('trim-end').value);
-    if (isNaN(s) || isNaN(e) || e <= s) {
-      showError('End time must be greater than start time.');
-      return;
-    }
-    const btn = $('btn-recut-short');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Re-cutting...';
-    showError('Trimming and re-rendering clip frame-accurately...');
-    try {
-      const rawCaptions = $('trim-captions') ? $('trim-captions').value : ($('shorts-captions') ? $('shorts-captions').value : 'hormozi');
-      const captions = rawCaptions !== 'none';
-      const caption_style = rawCaptions === 'clean' ? 'clean' : 'hormozi';
-      const custom_text = $('trim-custom-text') && $('trim-custom-text').value.trim() ? $('trim-custom-text').value.trim() : ($('shorts-custom-text') ? $('shorts-custom-text').value.trim() : '');
-      const custom_text_pos = $('shorts-custom-text-pos') ? $('shorts-custom-text-pos').value : 'top';
-      const sticker_badge = $('shorts-sticker-badge') ? $('shorts-sticker-badge').value : '';
-      const progress_bar = $('shorts-progress-bar') ? $('shorts-progress-bar').value : 'none';
-      const color_grade = $('shorts-color-grade') ? $('shorts-color-grade').value : 'enhanced';
-
-      const res = await api('/api/shorts/recut', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          clip_id: item.id,
-          start_time: s,
-          end_time: e,
-          layout: $('shorts-layout').value || 'single',
-          captions: captions,
-          caption_style: caption_style,
-          custom_text: custom_text,
-          custom_text_pos: custom_text_pos,
-          sticker_badge: sticker_badge,
-          progress_bar: progress_bar,
-          color_grade: color_grade,
-        })
-      });
-      showError('Short re-cut successfully!');
-      if (res.short) {
-        loadShort(res.short);
-        await refreshShortsLibrary();
+  // Aspect Ratio selector
+  const ratioPills = document.querySelectorAll('#manual-ratio-pills .ig-pill');
+  ratioPills.forEach(p => {
+    p.onclick = () => {
+      ratioPills.forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      manualEditState.aspectRatio = p.dataset.ratio;
+      if ($('video-overlay-ratio')) {
+        $('video-overlay-ratio').textContent = p.textContent.split(' ')[1] || p.dataset.ratio;
       }
-    } catch (err) {
-      showError('Failed to recut short: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Re-cut Clip';
-    }
-  };
+    };
+  });
+
+  // Volume & Mute Controls
+  const vSlider = $('manual-video-vol-slider');
+  const vLabel = $('manual-video-vol-label');
+  const vMuteBtn = $('manual-mute-video-btn');
+  const vMuteText = $('manual-mute-video-text');
+  if (vSlider) {
+    vSlider.value = 100;
+    vSlider.oninput = () => {
+      const val = parseInt(vSlider.value, 10);
+      if (vLabel) vLabel.textContent = val + '%';
+      manualEditState.videoVolume = val / 100;
+      if (manualEditState.muteVideo && val > 0) {
+        manualEditState.muteVideo = false;
+        if (vMuteBtn) vMuteBtn.classList.remove('active');
+        if (vMuteText) vMuteText.textContent = '🔊 Unmuted';
+      }
+    };
+  }
+  if (vMuteBtn) {
+    vMuteBtn.onclick = () => {
+      manualEditState.muteVideo = !manualEditState.muteVideo;
+      if (manualEditState.muteVideo) {
+        vMuteBtn.classList.add('active');
+        if (vMuteText) vMuteText.textContent = '🔇 Muted';
+      } else {
+        vMuteBtn.classList.remove('active');
+        if (vMuteText) vMuteText.textContent = '🔊 Unmuted';
+      }
+    };
+  }
+
+  const mSlider = $('manual-music-vol-slider');
+  const mLabel = $('manual-music-vol-label');
+  const mMuteBtn = $('manual-mute-music-btn');
+  const mMuteText = $('manual-mute-music-text');
+  if (mSlider) {
+    mSlider.value = 35;
+    mSlider.oninput = () => {
+      const val = parseInt(mSlider.value, 10);
+      if (mLabel) mLabel.textContent = val + '%';
+      manualEditState.musicVolume = val / 100;
+      if (manualEditState.muteMusic && val > 0) {
+        manualEditState.muteMusic = false;
+        if (mMuteBtn) mMuteBtn.classList.remove('active');
+        if (mMuteText) mMuteText.textContent = '🔊 Unmuted';
+      }
+    };
+  }
+  if (mMuteBtn) {
+    mMuteBtn.onclick = () => {
+      manualEditState.muteMusic = !manualEditState.muteMusic;
+      if (manualEditState.muteMusic) {
+        mMuteBtn.classList.add('active');
+        if (mMuteText) mMuteText.textContent = '🔇 Muted';
+      } else {
+        mMuteBtn.classList.remove('active');
+        if (mMuteText) mMuteText.textContent = '🔊 Unmuted';
+      }
+    };
+  }
+
+  // Custom Music Upload
+  const mFileInput = $('manual-custom-music-file');
+  const mSelect = $('manual-music-select');
+  const mStatus = $('manual-music-status');
+  const mClearBtn = $('manual-clear-music-btn');
+
+  if (mSelect && window.musicState && window.musicState.tracks && window.musicState.tracks.length) {
+    window.musicState.tracks.forEach(t => {
+      const fn = t.audio_file || (t.id + '.mp3');
+      if (!Array.from(mSelect.options).some(o => o.value === fn)) {
+        const opt = document.createElement('option');
+        opt.value = fn;
+        opt.textContent = '🎵 ' + (t.title || fn);
+        mSelect.appendChild(opt);
+      }
+    });
+  }
+
+  if (mFileInput) {
+    mFileInput.onchange = async () => {
+      const file = mFileInput.files[0];
+      if (!file) return;
+      if (mStatus) mStatus.textContent = `Uploading custom music: ${file.name}...`;
+      try {
+        const up = await api('/api/shorts/upload?name=' + encodeURIComponent(file.name), {
+          method: 'POST',
+          body: file,
+        });
+        if (mStatus) mStatus.textContent = `Attached custom music: ${file.name}`;
+        let opt = Array.from(mSelect.options).find(o => o.value === file.name);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = file.name;
+          opt.textContent = '🎵 Custom: ' + file.name;
+          mSelect.appendChild(opt);
+        }
+        mSelect.value = file.name;
+        if (mClearBtn) mClearBtn.style.display = 'inline-flex';
+      } catch (err) {
+        if (mStatus) mStatus.textContent = 'Music upload failed: ' + err.message;
+      }
+    };
+  }
+
+  if (mClearBtn) {
+    mClearBtn.onclick = () => {
+      if (mSelect) mSelect.value = '';
+      if (mStatus) mStatus.textContent = '';
+      mClearBtn.style.display = 'none';
+    };
+  }
+
+  // Stickers selector
+  const stickerPills = document.querySelectorAll('#manual-sticker-pills .ig-pill');
+  stickerPills.forEach(p => {
+    p.onclick = () => {
+      stickerPills.forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      manualEditState.sticker = p.dataset.sticker || '';
+    };
+  });
+
+  // Effects selector
+  const effectPills = document.querySelectorAll('#manual-effect-pills .ig-pill');
+  effectPills.forEach(p => {
+    p.onclick = () => {
+      effectPills.forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      manualEditState.effect = p.dataset.effect || 'clean';
+    };
+  });
+
+  // Apply Manual Edits & Re-render
+  if ($('btn-apply-manual-edit')) {
+    $('btn-apply-manual-edit').onclick = async () => {
+      const s = parseFloat($('trim-start').value);
+      const e = parseFloat($('trim-end').value);
+      if (isNaN(s) || isNaN(e) || e <= s) {
+        showError('End time must be greater than start time.');
+        return;
+      }
+      const btn = $('btn-apply-manual-edit');
+      const lbl = $('btn-apply-manual-edit-label');
+      btn.disabled = true;
+      lbl.innerHTML = '<span class="spinner"></span> Applying Instagram Edits...';
+      showError('Rendering short with custom cut, aspect crop, volume mix, stickers & effects...');
+
+      try {
+        const burnCheck = $('manual-burn-captions-check');
+        const burnCaptions = burnCheck ? burnCheck.checked : true;
+        const captionStyle = $('manual-caption-style') ? $('manual-caption-style').value : 'hormozi';
+        const quality = $('manual-quality-select') ? $('manual-quality-select').value : '1080p_standard';
+        const bgMusicFile = mSelect ? mSelect.value : null;
+
+        const res = await api('/api/shorts/manual-edit', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            clip_id: item.id,
+            source_path: item.source_file || item.filename,
+            start_time: s,
+            end_time: e,
+            aspect_ratio: manualEditState.aspectRatio,
+            video_volume: manualEditState.muteVideo ? 0.0 : manualEditState.videoVolume,
+            mute_video: manualEditState.muteVideo,
+            bg_music_file: bgMusicFile || null,
+            music_volume: manualEditState.muteMusic ? 0.0 : manualEditState.musicVolume,
+            mute_music: manualEditState.muteMusic,
+            effect: manualEditState.effect,
+            sticker: manualEditState.sticker,
+            burn_captions: burnCaptions,
+            caption_style: captionStyle,
+            quality: quality,
+            title: item.title ? `${item.title} (Edit)` : 'Instagram Edit Short',
+          }),
+        });
+
+        showError('Instagram Edits applied successfully!');
+        if (res.short) {
+          loadShort(res.short);
+          await refreshShortsLibrary();
+        }
+      } catch (err) {
+        showError('Failed to apply manual edits: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        lbl.textContent = '✨ Apply Manual Edits & Re-Render';
+      }
+    };
+  }
+
+  // Delete Short action
+  if ($('btn-delete-active-short')) {
+    $('btn-delete-active-short').onclick = async () => {
+      if (!confirm(`Permanently delete "${item.title || 'this short'}" from disk?`)) return;
+      try {
+        await api('/api/shorts/delete', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({clip_id: item.id}),
+        });
+        showError(`Deleted ${item.title || 'short'}.`);
+        $('shorts-player-card').style.display = 'none';
+        await refreshShortsLibrary();
+      } catch (err) {
+        showError('Delete failed: ' + err.message);
+      }
+    };
+  }
 
   if ($('shorts-reroll-card-btn')) {
     $('shorts-reroll-card-btn').onclick = () => {

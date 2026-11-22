@@ -1661,6 +1661,12 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/shorts/combine":
                 body = self._read_body() or {}
                 self._handle_shorts_combine(body)
+            elif path == "/api/shorts/delete":
+                body = self._read_body() or {}
+                self._handle_shorts_delete(body)
+            elif path == "/api/shorts/manual-edit":
+                body = self._read_body() or {}
+                self._handle_shorts_manual_edit(body)
             elif path == "/api/shorts/analyze-order":
                 body = self._read_body() or {}
                 self._handle_shorts_analyze_order(body)
@@ -2128,6 +2134,134 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"ok": True, "text": enhanced, "mode": mode})
         except Exception as e:
             self._json({"error": f"Text enhancement failed: {e}"}, 500)
+
+
+    def _handle_shorts_delete(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+        clip_id = str(body.get("clip_id") or "").strip()
+        if not clip_id:
+            self._json({"error": "clip_id is required"}, 400)
+            return
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+        ok = engine.delete_short(clip_id)
+        self._json({"ok": ok, "clip_id": clip_id})
+
+    def _handle_shorts_manual_edit(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+
+        clip_id = str(body.get("clip_id") or "").strip()
+        source_param = str(body.get("source_path") or "").strip()
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+
+        # 1. Resolve source video
+        source_path = None
+        if clip_id:
+            lib = engine.load_library()
+            target_entry = next((e for e in lib if e.get("id") == clip_id), None)
+            if target_entry:
+                fn = target_entry.get("filename")
+                src_fn = target_entry.get("source_file")
+                candidates = [
+                    out_dir / "shorts" / fn if fn else None,
+                    out_dir / "shorts" / "downloads" / src_fn if src_fn else None,
+                    out_dir / "uploads" / src_fn if src_fn else None,
+                    out_dir / src_fn if src_fn else None,
+                ]
+                for c in candidates:
+                    if c and c.exists():
+                        source_path = c
+                        break
+
+        if not source_path and source_param:
+            candidates = [
+                Path(source_param),
+                out_dir / source_param,
+                out_dir / "uploads" / source_param,
+                out_dir / "shorts" / source_param,
+            ]
+            for c in candidates:
+                if c.exists():
+                    source_path = c
+                    break
+
+        if not source_path or not source_path.exists():
+            self._json({"error": "Source video file not found"}, 404)
+            return
+
+        # 2. Extract parameters
+        try:
+            start_time = max(0.0, float(body.get("start_time", 0.0)))
+        except (ValueError, TypeError):
+            start_time = 0.0
+
+        try:
+            raw_end = body.get("end_time")
+            end_time = float(raw_end) if raw_end not in (None, "") else None
+        except (ValueError, TypeError):
+            end_time = None
+
+        aspect_ratio = str(body.get("aspect_ratio", "9:16"))
+        try:
+            video_volume = float(body.get("video_volume", 1.0))
+        except (ValueError, TypeError):
+            video_volume = 1.0
+        mute_video = bool(body.get("mute_video", False))
+
+        try:
+            music_volume = float(body.get("music_volume", 0.35))
+        except (ValueError, TypeError):
+            music_volume = 0.35
+        mute_music = bool(body.get("mute_music", False))
+
+        # Resolve bg music path
+        bg_music_file = str(body.get("bg_music_file") or "").strip()
+        bg_music_path = None
+        if bg_music_file:
+            candidates = [
+                Path(bg_music_file),
+                out_dir / bg_music_file,
+                out_dir / "uploads" / bg_music_file,
+                out_dir / "tracks" / bg_music_file,
+            ]
+            for c in candidates:
+                if c.exists():
+                    bg_music_path = c
+                    break
+
+        effect = str(body.get("effect", "clean"))
+        sticker = str(body.get("sticker", "")).strip()
+        burn_captions = bool(body.get("burn_captions", True))
+        caption_style = str(body.get("caption_style", "hormozi"))
+        quality = str(body.get("quality", "1080p_standard"))
+        title = str(body.get("title") or "Instagram Edit Short").strip()
+
+        try:
+            entry = engine.manual_edit_short(
+                source_path=source_path,
+                start_time=start_time,
+                end_time=end_time,
+                aspect_ratio=aspect_ratio,
+                video_volume=video_volume,
+                mute_video=mute_video,
+                bg_music_path=bg_music_path,
+                music_volume=music_volume,
+                mute_music=mute_music,
+                effect=effect,
+                sticker=sticker,
+                burn_captions=burn_captions,
+                caption_style=caption_style,
+                quality=quality,
+                title=title,
+            )
+            self._json({"ok": True, "short": entry})
+        except Exception as e:
+            self._json({"error": f"Manual edit failed: {e}"}, 500)
 
 
 def serve(port=8765, max_port=8775):
