@@ -1292,6 +1292,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           Voiceover AI
         </button>
+        <button class="studio-tab" id="tab-pulsecut">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          PulseCut Studio
+        </button>
       </div>
     </div>
     <div class="header-actions">
@@ -1789,12 +1793,12 @@
             <button class="speed-pill" data-speed="2">2x</button>
           </div>
 
-          <!-- Instagram Edits Manual Editing Panel -->
+          <!-- PulseCut Studio Manual Mobile Editing Panel -->
           <div class="ig-edits-panel" id="manual-reel-editor-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <span class="eyebrow" style="color:var(--brand); font-size:12px; margin:0; display:flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                Instagram Edits · Manual Reel Studio
+                PulseCut Studio · Mobile Reel Editor
               </span>
               <span id="manual-edit-duration-badge" class="mono" style="font-size:11px; background:var(--card); padding:2px 8px; border-radius:4px; border:1px solid var(--line); color:var(--accent);">0.0s</span>
             </div>
@@ -1884,10 +1888,10 @@
               </div>
             </div>
 
-            <!-- 3. Stickers & Visual Effects (like Instagram Edits) -->
+            <!-- 3. Stickers & Visual Effects (PulseCut Mobile Studio) -->
             <div class="ig-section">
               <div class="ig-section-title">
-                <span>🏷️ Instagram Stickers & Effects</span>
+                <span>🏷️ PulseCut Stickers & Effects</span>
                 <span style="font-size:10px; color:var(--muted); text-transform:none;">Viral hooks & color grading</span>
               </div>
               <!-- Stickers Badges -->
@@ -1956,6 +1960,10 @@
               <button class="btn-primary" id="btn-apply-manual-edit" style="padding:7px 18px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 <span id="btn-apply-manual-edit-label">✨ Apply Manual Edits & Re-Render</span>
+              </button>
+              <button type="button" class="btn" id="shorts-open-pulsecut-btn" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; border-color:var(--brand); color:var(--brand);" title="Open and edit this reel in PulseCut Studio multi-track editor">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                🎨 Open in PulseCut Studio
               </button>
               <a class="btn" id="shorts-download-link" download style="display:inline-flex; align-items:center; gap:6px; font-weight:600;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2145,6 +2153,49 @@
       </div>
     </footer>
   </div><!-- /#view-voiceover -->
+
+  <!-- PulseCut Studio Tab: Free, Browser-Native Video Editor -->
+  <div id="view-pulsecut" style="display:none; flex-direction:column; gap:20px;">
+    <div class="card" style="position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+        <div>
+          <div class="eyebrow" style="color:var(--brand); margin-bottom:2px;">🎬 PulseCut Browser Studio</div>
+          <div style="font-size:13px; font-weight:600; color:var(--fg);">Free, Client-Side Multi-Track Mobile Video Editor</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label class="btn" style="cursor:pointer; font-size:12px; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>+ Import Video / Audio</span>
+            <input type="file" id="pulsecut-import-file" accept="video/*,audio/*,image/*" style="display:none;">
+          </label>
+          <button type="button" class="btn" id="pulsecut-new-project-btn" style="font-size:12px; padding:5px 12px;">📄 New Project</button>
+        </div>
+      </div>
+
+      <!-- PulseCut Studio Mounted Container -->
+      <div id="pulsecut-studio-container" style="min-height:480px;">
+        <div style="text-align:center; padding:60px 20px; color:var(--muted);">
+          <span class="spinner"></span> Initializing PulseCut Video Editor...
+        </div>
+      </div>
+    </div>
+
+    <footer class="studio-footer">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <span class="footer-author">by <strong class="author-highlight">Sneh Dutta</strong></span>
+          <span class="footer-dot">&bull;</span>
+          <span class="footer-xoyan">founder of <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-brand-link">Xoyan</a></span>
+          <span class="footer-dot">&bull;</span>
+          <a href="https://www.xoyan.org" target="_blank" rel="noopener noreferrer" class="xoyan-domain-link">www.xoyan.org</a>
+        </div>
+        <div class="footer-right">
+          <span class="footer-pill">100% Client-Side Engine</span>
+          <span class="footer-sub">WebCodecs &middot; Web Audio API &middot; Zero Cloud Fees</span>
+        </div>
+      </div>
+    </footer>
+  </div><!-- /#view-pulsecut -->
 
   <!-- Viral Metadata Modal -->
   <div id="metadata-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); z-index:90; align-items:center; justify-content:center; padding:20px;">
@@ -3321,6 +3372,7 @@ const shortsState = {
 $('tab-music').onclick = () => switchStudio('music');
 $('tab-shorts').onclick = () => switchStudio('shorts');
 $('tab-voiceover').onclick = () => switchStudio('voiceover');
+if ($('tab-pulsecut')) $('tab-pulsecut').onclick = () => switchStudio('pulsecut');
 
 function switchStudio(name) {
   localStorage.setItem('cm-active-studio', name);
@@ -3330,19 +3382,25 @@ function switchStudio(name) {
     if (name === 'music') badge.textContent = 'Music Studio';
     else if (name === 'shorts') badge.textContent = 'Shorts Studio';
     else if (name === 'voiceover') badge.textContent = 'Voiceover Studio';
+    else if (name === 'pulsecut') badge.textContent = 'PulseCut Studio';
   }
 
   $('tab-music').classList.toggle('active', name === 'music');
   $('tab-shorts').classList.toggle('active', name === 'shorts');
   $('tab-voiceover').classList.toggle('active', name === 'voiceover');
+  if ($('tab-pulsecut')) $('tab-pulsecut').classList.toggle('active', name === 'pulsecut');
 
   $('view-music').style.display = name === 'music' ? 'flex' : 'none';
   $('view-shorts').style.display = name === 'shorts' ? 'flex' : 'none';
   $('view-voiceover').style.display = name === 'voiceover' ? 'flex' : 'none';
+  if ($('view-pulsecut')) $('view-pulsecut').style.display = name === 'pulsecut' ? 'flex' : 'none';
 
   if (name === 'shorts') {
     refreshShortsLibrary();
     populateMusicForShorts();
+  }
+  if (name === 'pulsecut') {
+    initPulseCutStudio();
   }
   if (audio.paused) drawFrame();
 }
@@ -3963,8 +4021,16 @@ function renderShortsLibrary() {
       <div class="short-card-meta">
         <span class="score-badge" style="font-size:10px;height:18px;padding:0 6px;">${item.clip_count ? item.clip_count + ' clips' : (item.score || 85) + ' Score'}</span>
         <span class="mono">${item.duration ? item.duration + 's' : ''}</span>
+        <button type="button" class="btn" style="padding:2px 7px; font-size:10px; margin-left:auto; border-color:var(--brand); color:var(--brand);" title="Open in PulseCut multi-track timeline">🎨 Edit</button>
       </div>
     `;
+    const editBtn = info.querySelector('button');
+    if (editBtn) {
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        openShortInPulseCut(item);
+      };
+    }
 
     card.appendChild(thumbBox);
     card.appendChild(info);
@@ -4152,7 +4218,7 @@ function loadShort(item) {
     edlBox.style.display = 'none';
   }
 
-  // Initialize Instagram Edits Studio State & Controls
+  // Initialize PulseCut Studio State & Controls
   let manualEditState = {
     aspectRatio: item.aspect_ratio || '9:16',
     videoVolume: 1.0,
@@ -4372,7 +4438,7 @@ function loadShort(item) {
       const btn = $('btn-apply-manual-edit');
       const lbl = $('btn-apply-manual-edit-label');
       btn.disabled = true;
-      lbl.innerHTML = '<span class="spinner"></span> Applying Instagram Edits...';
+      lbl.innerHTML = '<span class="spinner"></span> Applying PulseCut Studio Edits...';
       showError('Rendering short with custom cut, aspect crop, volume mix, stickers & effects...');
 
       try {
@@ -4401,11 +4467,11 @@ function loadShort(item) {
             burn_captions: burnCaptions,
             caption_style: captionStyle,
             quality: quality,
-            title: item.title ? `${item.title} (Edit)` : 'Instagram Edit Short',
+            title: item.title ? `${item.title} (Edit)` : 'PulseCut Edit Short',
           }),
         });
 
-        showError('Instagram Edits applied successfully!');
+        showError('PulseCut Studio Edits applied successfully!');
         if (res.short) {
           loadShort(res.short);
           await refreshShortsLibrary();
@@ -4416,6 +4482,13 @@ function loadShort(item) {
         btn.disabled = false;
         lbl.textContent = '✨ Apply Manual Edits & Re-Render';
       }
+    };
+  }
+
+  // Open in PulseCut Studio action
+  if ($('shorts-open-pulsecut-btn')) {
+    $('shorts-open-pulsecut-btn').onclick = () => {
+      openShortInPulseCut(item);
     };
   }
 
@@ -4799,6 +4872,158 @@ async function enhanceVoiceoverAudio(preset) {
 $('vo-audio-studio').onclick = () => enhanceVoiceoverAudio('studio');
 $('vo-audio-warmth').onclick = () => enhanceVoiceoverAudio('warmth');
 $('vo-audio-loudnorm').onclick = () => enhanceVoiceoverAudio('loudnorm');
+
+// ==========================================
+// PulseCut Studio Client-Side Orchestration
+// ==========================================
+let pulseCutAppInstance = null;
+let pulseCutInitialized = false;
+
+async function initPulseCutStudio() {
+  if (pulseCutInitialized && pulseCutAppInstance) return pulseCutAppInstance;
+  const container = $('pulsecut-studio-container');
+  if (!container) return null;
+
+  try {
+    const module = await import('/pulsecut/pulsecut.js');
+    if (module && module.PulseCutApp) {
+      pulseCutAppInstance = new module.PulseCutApp();
+      pulseCutAppInstance.mount(container);
+      window.pulseCutStudio = pulseCutAppInstance;
+      pulseCutInitialized = true;
+      return pulseCutAppInstance;
+    }
+  } catch (err) {
+    console.error('Failed to initialize PulseCut Studio:', err);
+    container.innerHTML = `<div style="padding:24px; color:#ef4444;">Failed to load PulseCut Studio: ${err.message}</div>`;
+  }
+  return null;
+}
+
+async function openShortInPulseCut(item) {
+  if (!item) return;
+  switchStudio('pulsecut');
+  const app = await initPulseCutStudio();
+  if (!app) return;
+
+  showError('Loading clip into PulseCut Studio...');
+  const timelineFilename = item.timeline_file || item.filename || item.id;
+  try {
+    const res = await fetch('/api/shorts/timeline/' + encodeURIComponent(timelineFilename));
+    if (res.ok) {
+      const data = await res.json();
+      await app.loadFromProjectJson(data);
+      showError(`Loaded "${item.title || 'Reel'}" into PulseCut timeline!`);
+      return;
+    }
+  } catch (err) {
+    console.warn('Could not fetch timeline JSON, generating one-clip project fallback:', err);
+  }
+
+  // Fallback: construct schema-compliant project with the short's video
+  const dur = parseFloat(item.duration) || 15.0;
+  const videoUrl = '/api/shorts/video/' + encodeURIComponent(item.filename);
+  const fallbackProject = {
+    project: {
+      id: 'proj_' + (item.id || Date.now()),
+      title: item.title || 'PulseCut Reel',
+      author: 'Creator',
+      created_at: Date.now(),
+      updated_at: Date.now(),
+      canvas: {
+        width: 1080,
+        height: 1920,
+        aspect_ratio: '9:16',
+        fps: 30,
+        duration: dur,
+        background_color: '#000000',
+      },
+    },
+    assets: [
+      {
+        id: 'asset_' + (item.id || 'video'),
+        type: 'video',
+        name: item.filename,
+        source: videoUrl,
+        duration: dur,
+        width: 1080,
+        height: 1920,
+      }
+    ],
+    tracks: [
+      {
+        id: 'track_video_main',
+        name: 'Main Video Track',
+        type: 'video',
+        order: 0,
+        muted: false,
+        locked: false,
+        visible: true,
+        volume: 1.0,
+        clips: [
+          {
+            id: 'clip_main_' + (item.id || '1'),
+            asset_id: 'asset_' + (item.id || 'video'),
+            name: item.title || item.filename,
+            start: 0,
+            end: dur,
+            trim_in: 0,
+            trim_out: dur,
+            speed: 1.0,
+            volume: 1.0,
+            transform: {
+              x: 0,
+              y: 0,
+              scale: 1.0,
+              rotation: 0,
+              opacity: 1.0,
+              fit: 'cover',
+            },
+            filters: {
+              filter_type: 'clean',
+            },
+          }
+        ]
+      },
+      {
+        id: 'track_overlay_stickers',
+        name: 'Stickers & Graphics',
+        type: 'sticker',
+        order: 1,
+        muted: false,
+        locked: false,
+        visible: true,
+        volume: 1.0,
+        clips: []
+      },
+      {
+        id: 'track_overlay_captions',
+        name: 'Dynamic Captions',
+        type: 'text',
+        order: 2,
+        muted: false,
+        locked: false,
+        visible: true,
+        volume: 1.0,
+        clips: []
+      },
+      {
+        id: 'track_audio_music',
+        name: 'Background Music',
+        type: 'audio',
+        order: 3,
+        muted: false,
+        locked: false,
+        visible: true,
+        volume: 0.35,
+        clips: []
+      }
+    ]
+  };
+
+  await app.loadFromProjectJson(fallbackProject);
+  showError(`Imported "${item.title || 'Reel'}" into PulseCut timeline!`);
+}
 
 init().then(fitCanvas);
 </script>

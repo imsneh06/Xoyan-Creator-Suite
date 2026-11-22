@@ -285,7 +285,207 @@ class ShortsEngine:
                 if p.exists():
                     p.unlink()
 
+        # Remove timeline json
+        tl_path = self.shorts_dir / f"{clip_id}.timeline.json"
+        with contextlib.suppress(Exception):
+            if tl_path.exists():
+                tl_path.unlink()
+
         return True
+
+    def export_timeline_json(
+        self,
+        entry: dict,
+        edl: list | None = None,
+        transcript: dict | None = None,
+        bg_music_file: str | None = None,
+    ) -> Path:
+        """Export project timeline JSON strictly adhering to docs/timeline-schema.json."""
+        clip_id = entry.get("id") or f"short_{int(time.time())}"
+        tl_path = self.shorts_dir / f"{clip_id}.timeline.json"
+
+        dur = float(entry.get("duration") or 30.0)
+        ratio = entry.get("aspect_ratio") or "9:16"
+        w, h = (1080, 1920)
+        if ratio == "1:1":
+            w, h = (1080, 1080)
+        elif ratio == "4:5":
+            w, h = (1080, 1350)
+        elif ratio == "16:9":
+            w, h = (1920, 1080)
+
+        assets = []
+        source_fn = entry.get("source_file") or entry.get("filename")
+        src_asset_id = "asset_src_main"
+        if source_fn:
+            assets.append({
+                "id": src_asset_id,
+                "name": source_fn,
+                "type": "video",
+                "duration": dur,
+                "width": w,
+                "height": h,
+                "url": f"/api/shorts/video/{entry.get('filename') or source_fn}",
+            })
+
+        if bg_music_file:
+            assets.append({
+                "id": "asset_bgm",
+                "name": bg_music_file,
+                "type": "audio",
+                "duration": dur,
+                "url": f"/api/tracks/{bg_music_file}",
+            })
+
+        video_clips = []
+        if edl:
+            for c in edl:
+                c_start = float(c.get("output_in", 0.0))
+                c_end = float(c.get("output_out", c_start + 2.0))
+                c_tin = float(c.get("input_in", 0.0))
+                c_tout = float(c.get("input_out", c_tin + (c_end - c_start)))
+                video_clips.append({
+                    "id": f"clip_{len(video_clips) + 1}",
+                    "asset_id": src_asset_id,
+                    "start": c_start,
+                    "end": c_end,
+                    "trim_in": c_tin,
+                    "trim_out": c_tout,
+                    "speed": 1.0,
+                    "volume": 1.0,
+                    "transform": {"scale": 1.15 if c.get("zoom") == "115% Zoom" else 1.0},
+                })
+        else:
+            s_t = float(entry.get("start_time") or 0.0)
+            e_t = float(entry.get("end_time") or (s_t + dur))
+            video_clips.append({
+                "id": "clip_main",
+                "asset_id": src_asset_id,
+                "start": 0.0,
+                "end": dur,
+                "trim_in": s_t,
+                "trim_out": e_t,
+                "speed": 1.0,
+                "volume": 1.0,
+            })
+
+        tracks = [
+            {
+                "id": "track_video",
+                "name": "Main Video",
+                "type": "video",
+                "order": 0,
+                "muted": False,
+                "visible": True,
+                "volume": 1.0,
+                "clips": video_clips,
+            }
+        ]
+
+        sticker_text = entry.get("sticker")
+        if sticker_text:
+            tracks.append({
+                "id": "track_stickers",
+                "name": "Stickers & Badges",
+                "type": "sticker",
+                "order": 1,
+                "muted": False,
+                "visible": True,
+                "volume": 1.0,
+                "clips": [{
+                    "id": "clip_sticker_1",
+                    "start": 0.0,
+                    "end": dur,
+                    "trim_in": 0.0,
+                    "trim_out": dur,
+                    "text": {
+                        "content": sticker_text,
+                        "position": "top",
+                        "font_family": "Montserrat, sans-serif",
+                    }
+                }]
+            })
+
+        words = []
+        if transcript and isinstance(transcript, dict):
+            for s in transcript.get("segments", []):
+                for w in s.get("words", []):
+                    words.append({
+                        "word": w.get("word", "").upper(),
+                        "start": float(w.get("start", 0.0)),
+                        "end": float(w.get("end", 0.0)),
+                        "highlight": False,
+                    })
+        if words:
+            tracks.append({
+                "id": "track_subtitles",
+                "name": "Captions",
+                "type": "subtitle",
+                "order": 2,
+                "muted": False,
+                "visible": True,
+                "volume": 1.0,
+                "clips": [{
+                    "id": "clip_subtitles_main",
+                    "start": 0.0,
+                    "end": dur,
+                    "trim_in": 0.0,
+                    "trim_out": dur,
+                    "captions": {
+                        "style": "hormozi",
+                        "words": words,
+                    }
+                }]
+            })
+
+        if bg_music_file:
+            tracks.append({
+                "id": "track_bgm",
+                "name": "Background Music",
+                "type": "audio",
+                "order": 3,
+                "muted": False,
+                "visible": True,
+                "volume": 0.35,
+                "clips": [{
+                    "id": "clip_bgm_1",
+                    "asset_id": "asset_bgm",
+                    "start": 0.0,
+                    "end": dur,
+                    "trim_in": 0.0,
+                    "trim_out": dur,
+                    "volume": 0.35,
+                }]
+            })
+
+        schema_data = {
+            "version": "1.0.0",
+            "project": {
+                "id": clip_id,
+                "title": entry.get("title", "PulseCut Reel"),
+                "author": "Creator",
+                "created_at": int(time.time() * 1000),
+                "updated_at": int(time.time() * 1000),
+                "canvas": {
+                    "width": w,
+                    "height": h,
+                    "aspect_ratio": ratio,
+                    "fps": 30,
+                    "duration": dur,
+                    "background_color": "#000000",
+                }
+            },
+            "assets": assets,
+            "tracks": tracks,
+        }
+
+        try:
+            with tl_path.open("w", encoding="utf-8") as f:
+                json.dump(schema_data, f, indent=2)
+        except Exception as e:
+            print(f"[shorts_engine] failed to export timeline json: {e}", file=sys.stderr)
+
+        return tl_path
 
     def clean_temp_files(self):
         """Purge all temporary artifacts from memory and disk."""
@@ -1109,6 +1309,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 "captions": has_subtitles,
                 "source_file": source_path.name,
             }
+            try:
+                tl = self.export_timeline_json(entry, edl=entry.get("edl"), transcript=transcript, bg_music_file=bg_music_path.name if bg_music_path else None)
+                entry["timeline_file"] = tl.name
+            except Exception:
+                pass
             self.save_library_entry(entry)
             rendered.append(entry)
 
@@ -1207,6 +1412,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             "source_file": source_path.name,
             "note": res.get("note", ""),
         }
+        try:
+            bg_music = music_path.name if music_path else None
+            tl = self.export_timeline_json(entry, edl=entry.get("edl"), bg_music_file=bg_music)
+            entry["timeline_file"] = tl.name
+        except Exception:
+            pass
         self.save_library_entry(entry)
         return entry
 
@@ -1327,6 +1538,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             "source_file": f"Montage ({len(valid_clips)} clips)",
             "clip_count": len(valid_clips),
         }
+        try:
+            bg_music = bg_music_path.name if bg_music_path else None
+            tl = self.export_timeline_json(entry, bg_music_file=bg_music)
+            entry["timeline_file"] = tl.name
+        except Exception:
+            pass
         self.save_library_entry(entry)
         return entry
 
@@ -1853,6 +2070,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             "effect": effect,
             "sticker": sticker_badge_text,
         }
+        try:
+            tl = self.export_timeline_json(entry, bg_music_file=bg_music_path.name if bg_music_path else None)
+            entry["timeline_file"] = tl.name
+        except Exception:
+            pass
         self.save_library_entry(entry)
         return entry
 

@@ -1274,6 +1274,14 @@ class Handler(BaseHTTPRequestHandler):
                     self._file(asset_file, ctype)
                 else:
                     self._json({"error": "asset not found"}, 404)
+            elif path.startswith("/pulsecut/"):
+                rel_name = path[len("/pulsecut/"):].lstrip("/\\")
+                safe_name = Path(rel_name).name
+                js_file = WEBAPP_DIR / "pulsecut" / safe_name
+                if js_file.exists() and js_file.is_file():
+                    self._file(js_file, "application/javascript; charset=utf-8")
+                else:
+                    self._json({"error": "pulsecut file not found"}, 404)
             elif path == "/api/status":
                 cfg = load_config()
                 snap = self.runner.snapshot()
@@ -1316,6 +1324,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._serve_shorts_video(path[len("/api/shorts/video/"):])
             elif path.startswith("/api/shorts/thumb/"):
                 self._serve_shorts_thumb(path[len("/api/shorts/thumb/"):])
+            elif path.startswith("/api/shorts/timeline/"):
+                self._serve_shorts_timeline(path[len("/api/shorts/timeline/"):])
             else:
                 self._json({"error": "not found"}, 404)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
@@ -1754,6 +1764,35 @@ class Handler(BaseHTTPRequestHandler):
         ext = path.suffix.lower()
         ctype = "image/png" if ext == ".png" else "image/webp" if ext == ".webp" else "image/jpeg"
         self._file(path, ctype)
+
+    def _serve_shorts_timeline(self, filename):
+        out_dir = self._output_dir()
+        safe_name = Path(unquote(str(filename))).name
+        if not safe_name or safe_name.startswith("."):
+            self._json({"error": "invalid filename"}, 400)
+            return
+        path = (out_dir / "shorts" / safe_name).resolve()
+        try:
+            path.relative_to((out_dir / "shorts").resolve())
+        except ValueError:
+            self._json({"error": "access denied"}, 403)
+            return
+        if not path.exists() or not path.is_file():
+            candidate1 = (out_dir / "shorts" / f"{safe_name}.timeline.json").resolve()
+            candidate2 = (out_dir / "shorts" / f"{Path(safe_name).stem}.timeline.json").resolve()
+            if candidate1.exists() and candidate1.is_file():
+                path = candidate1
+            elif candidate2.exists() and candidate2.is_file():
+                path = candidate2
+            else:
+                self._json({"error": "timeline file not found"}, 404)
+                return
+        try:
+            with path.open(encoding="utf-8") as f:
+                data = json.load(f)
+            self._json(data)
+        except Exception as e:
+            self._json({"error": f"failed to read timeline: {e}"}, 500)
 
     def _handle_video_upload(self):
         query = parse_qs(urlparse(self.path).query)

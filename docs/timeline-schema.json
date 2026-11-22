@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PulseCut Shared Timeline Project Schema",
+  "description": "Universal timeline data model shared across AI Reel Maker, Browser-Native Video Editor, and Mobile Touch Panel.",
+  "type": "object",
+  "required": ["version", "project", "assets", "tracks"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version string",
+      "default": "1.0.0"
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "title", "canvas"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique project identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Project title or reel name"
+        },
+        "author": {
+          "type": "string",
+          "default": "Creator"
+        },
+        "created_at": {
+          "type": "number",
+          "description": "Unix timestamp in milliseconds"
+        },
+        "updated_at": {
+          "type": "number",
+          "description": "Unix timestamp in milliseconds"
+        },
+        "canvas": {
+          "type": "object",
+          "required": ["width", "height", "fps", "duration"],
+          "properties": {
+            "width": { "type": "integer", "default": 1080 },
+            "height": { "type": "integer", "default": 1920 },
+            "aspect_ratio": {
+              "type": "string",
+              "enum": ["9:16", "1:1", "4:5", "16:9"],
+              "default": "9:16"
+            },
+            "fps": { "type": "number", "default": 30 },
+            "duration": {
+              "type": "number",
+              "description": "Total project timeline duration in seconds"
+            },
+            "background_color": {
+              "type": "string",
+              "default": "#000000"
+            }
+          }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "description": "Registry of raw imported or generated media sources",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "type"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["video", "audio", "image"]
+          },
+          "duration": { "type": "number" },
+          "width": { "type": "integer" },
+          "height": { "type": "integer" },
+          "sample_rate": { "type": "integer", "default": 44100 },
+          "channels": { "type": "integer", "default": 2 },
+          "url": { "type": "string", "description": "Blob URL, server URL, or OPFS file path" },
+          "proxy_url": { "type": "string", "description": "Low-resolution 360p/540p proxy for mobile scrub memory conservation" }
+        }
+      }
+    },
+    "tracks": {
+      "type": "array",
+      "description": "Ordered multi-track layers (bottom-to-top visual order, parallel audio mixer)",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "clips"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["video", "audio", "text", "subtitle", "sticker", "effect"]
+          },
+          "order": { "type": "integer" },
+          "muted": { "type": "boolean", "default": false },
+          "locked": { "type": "boolean", "default": false },
+          "visible": { "type": "boolean", "default": true },
+          "volume": { "type": "number", "minimum": 0.0, "maximum": 2.0, "default": 1.0 },
+          "clips": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "start", "end", "trim_in", "trim_out"],
+              "properties": {
+                "id": { "type": "string" },
+                "asset_id": {
+                  "type": "string",
+                  "description": "Foreign key referencing assets[].id (optional for text/shapes)"
+                },
+                "start": {
+                  "type": "number",
+                  "description": "Placement start on master timeline in seconds"
+                },
+                "end": {
+                  "type": "number",
+                  "description": "Placement end on master timeline in seconds"
+                },
+                "trim_in": {
+                  "type": "number",
+                  "description": "In-point offset into source media in seconds"
+                },
+                "trim_out": {
+                  "type": "number",
+                  "description": "Out-point offset into source media in seconds"
+                },
+                "speed": {
+                  "type": "number",
+                  "minimum": 0.1,
+                  "maximum": 8.0,
+                  "default": 1.0
+                },
+                "volume": {
+                  "type": "number",
+                  "minimum": 0.0,
+                  "maximum": 2.0,
+                  "default": 1.0
+                },
+                "muted": { "type": "boolean", "default": false },
+                "transform": {
+                  "type": "object",
+                  "properties": {
+                    "x": { "type": "number", "default": 0 },
+                    "y": { "type": "number", "default": 0 },
+                    "scale": { "type": "number", "default": 1.0 },
+                    "rotation": { "type": "number", "default": 0 },
+                    "opacity": { "type": "number", "minimum": 0.0, "maximum": 1.0, "default": 1.0 },
+                    "fit": {
+                      "type": "string",
+                      "enum": ["cover", "contain", "fill"],
+                      "default": "cover"
+                    }
+                  }
+                },
+                "text": {
+                  "type": "object",
+                  "properties": {
+                    "content": { "type": "string" },
+                    "font_family": { "type": "string", "default": "Montserrat, sans-serif" },
+                    "font_size": { "type": "number", "default": 48 },
+                    "font_weight": { "type": "string", "default": "800" },
+                    "color": { "type": "string", "default": "#ffffff" },
+                    "background_color": { "type": "string", "default": "rgba(0,0,0,0.7)" },
+                    "border_color": { "type": "string", "default": "#000000" },
+                    "border_width": { "type": "number", "default": 2 },
+                    "align": { "type": "string", "enum": ["left", "center", "right"], "default": "center" },
+                    "position": { "type": "string", "enum": ["top", "middle", "bottom", "custom"], "default": "top" },
+                    "animation": {
+                      "type": "string",
+                      "enum": ["none", "hormozi_pop", "fade", "bounce", "typewriter"],
+                      "default": "hormozi_pop"
+                    }
+                  }
+                },
+                "captions": {
+                  "type": "object",
+                  "properties": {
+                    "style": { "type": "string", "enum": ["hormozi", "clean", "classic"], "default": "hormozi" },
+                    "words": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["word", "start", "end"],
+                        "properties": {
+                          "word": { "type": "string" },
+                          "start": { "type": "number" },
+                          "end": { "type": "number" },
+                          "highlight": { "type": "boolean", "default": false }
+                        }
+                      }
+                    }
+                  }
+                },
+                "effects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "clean",
+                          "vhs",
+                          "film_grain",
+                          "soft_glow",
+                          "teal_orange",
+                          "bw_noir",
+                          "punch_zoom",
+                          "highpass",
+                          "compressor",
+                          "loudnorm"
+                        ]
+                      },
+                      "intensity": { "type": "number", "default": 1.0 },
+                      "params": { "type": "object" }
+                    }
+                  }
+                },
+                "transition": {
+                  "type": "object",
+                  "properties": {
+                    "in": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["fade", "wipe_left", "wipe_right", "dissolve", "zoom_in"] },
+                        "duration": { "type": "number", "default": 0.35 }
+                      }
+                    },
+                    "out": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["fade", "wipe_left", "wipe_right", "dissolve", "zoom_out"] },
+                        "duration": { "type": "number", "default": 0.35 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
