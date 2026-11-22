@@ -448,5 +448,121 @@ def test_server_shorts_delete_and_manual_edit(tmp_path):
     assert sent_json[-1][1] == 404
 
 
+def test_shorts_engine_export_timeline_json_schema_conformance(tmp_path):
+    engine = ShortsEngine(tmp_path)
+    entry = {
+        "id": "short_schema_test",
+        "title": "Schema Test Reel",
+        "duration": 18.0,
+        "aspect_ratio": "9:16",
+        "filename": "reel_test.mp4",
+        "source_file": "original.mp4",
+        "sticker": "🔥 MUST WATCH",
+    }
+    edl = [
+        {"clip": 1, "output_in": 0.0, "output_out": 4.5, "input_in": 1.0, "input_out": 5.5, "zoom": "115% Zoom", "text": "Hook"},
+        {"clip": 2, "output_in": 4.5, "output_out": 18.0, "input_in": 8.0, "input_out": 21.5, "zoom": "Normal", "text": "Story"},
+    ]
+    transcript = {
+        "segments": [
+            {
+                "words": [
+                    {"word": "Welcome", "start": 0.1, "end": 0.5},
+                    {"word": "to", "start": 0.5, "end": 0.7},
+                    {"word": "testing", "start": 0.7, "end": 1.2},
+                ]
+            }
+        ]
+    }
+
+    tl_path = engine.export_timeline_json(entry, edl=edl, transcript=transcript, bg_music_file="beat.mp3")
+    assert tl_path.exists()
+
+    with tl_path.open(encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 1. Top-level schema conformance
+    for req_field in ["version", "project", "assets", "tracks"]:
+        assert req_field in data, f"Missing required root field: {req_field}"
+
+    # 2. Project & Canvas conformance
+    proj = data["project"]
+    assert proj["id"] == "short_schema_test"
+    assert proj["title"] == "Schema Test Reel"
+    canvas = proj["canvas"]
+    assert canvas["width"] == 1080
+    assert canvas["height"] == 1920
+    assert canvas["aspect_ratio"] == "9:16"
+    assert canvas["duration"] == 18.0
+    assert canvas["fps"] == 30
+
+    # 3. Assets conformance
+    assert len(data["assets"]) >= 2
+    video_asset = next(a for a in data["assets"] if a["type"] == "video")
+    audio_asset = next(a for a in data["assets"] if a["type"] == "audio")
+    assert video_asset["id"] == "asset_src_main"
+    assert audio_asset["name"] == "beat.mp3"
+
+    # 4. Tracks & Clips conformance
+    track_types = [t["type"] for t in data["tracks"]]
+    assert "video" in track_types
+    assert "sticker" in track_types
+    assert "subtitle" in track_types
+    assert "audio" in track_types
+
+    # Video track clips
+    v_track = next(t for t in data["tracks"] if t["type"] == "video")
+    assert len(v_track["clips"]) == 2
+    assert v_track["clips"][0]["start"] == 0.0
+    assert v_track["clips"][0]["end"] == 4.5
+    assert v_track["clips"][0]["transform"]["scale"] == 1.15
+
+    # Subtitle track captions
+    sub_track = next(t for t in data["tracks"] if t["type"] == "subtitle")
+    words = sub_track["clips"][0]["captions"]["words"]
+    assert len(words) == 3
+    assert words[0]["word"] == "WELCOME"
+
+
+def test_autoedit_clip_sanitization_and_ffmpeg_failure_diagnostics(tmp_path, monkeypatch):
+    import reel_autoedit
+
+    # 1. Verify clip normalization filters sub-0.25s clips and defaults when empty
+    invalid_clips = [
+        {"start": 1.0, "end": 1.05},  # duration 0.05s -> cut
+        {"start": 2.0, "end": 1.5},   # negative duration -> cut
+    ]
+    norm = [c for c in reel_autoedit.normalize_clips(invalid_clips) if float(c.get("end", 0)) - float(c.get("start", 0)) >= 0.25]
+    assert len(norm) == 0
+
+    # 2. Test FFmpeg error diagnostic hint on empty streams
+    def mock_run_fail(*args, **kwargs):
+        class Proc:
+            returncode = 4294967274
+            stderr = "Could not open encoder before EOF\nNothing was written into output file, because at least one of its streams received no packets."
+        return Proc()
+
+    monkeypatch.setattr(subprocess, "run", mock_run_fail)
+    src_video = tmp_path / "dummy.mp4"
+    src_video.write_bytes(b"\x00" * 1024)
+    out_video = tmp_path / "out.mp4"
+
+    monkeypatch.setattr(reel_autoedit, "check_has_audio", lambda p: False)
+    monkeypatch.setattr(reel_autoedit, "probe_duration", lambda p: 5.0)
+
+    try:
+        reel_autoedit.autoedit_video(
+            src_video,
+            5.0,
+            out_video,
+            burn_captions=False,
+        )
+        raise AssertionError("Expected RuntimeError on FFmpeg failure")
+    except RuntimeError as err:
+        assert "0 packets before EOF" in str(err)
+        assert "exit 4294967274" in str(err)
+
+
+
 
 

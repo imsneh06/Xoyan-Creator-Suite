@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import threading
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -483,3 +484,66 @@ def test_live_server_smoke(server_module, tmp_path, monkeypatch):
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def test_voiceover_and_timeline_endpoints(server_module, tmp_path):
+    h = object.__new__(server_module.Handler)
+    h._output_dir = lambda: tmp_path
+
+    sent_json = []
+    h._json = lambda data, status=200: sent_json.append((data, status))
+
+    # 1. Voiceover text enhancement: missing text
+    h._handle_voiceover_enhance_text({})
+    assert sent_json[-1][1] == 400
+
+    # 2. Voiceover text enhancement: valid text with hook mode
+    h._handle_voiceover_enhance_text({"text": "how to build apps fast", "mode": "hook"})
+    assert sent_json[-1][1] == 200
+    assert sent_json[-1][0]["ok"] is True
+    assert "how to build apps fast" in sent_json[-1][0]["text"]
+
+    # 3. Voiceover audio enhancement: missing file
+    h._handle_voiceover_enhance_audio({"file": "non_existent.wav", "preset": "studio"})
+    assert sent_json[-1][1] == 404
+
+    # 4. Voiceover extract audio: missing file
+    h._handle_voiceover_extract({"source": "missing_video.mp4"})
+    assert sent_json[-1][1] == 404
+
+    # 5. Timeline serving: safe serving & traversal defense
+    shorts_dir = tmp_path / "shorts"
+    shorts_dir.mkdir(parents=True, exist_ok=True)
+    sample_tl = shorts_dir / "short_test.timeline.json"
+    sample_tl.write_text(json.dumps({"version": "1.0.0", "project": {"title": "Test"}}), encoding="utf-8")
+
+    # Serve by full filename
+    h._serve_shorts_timeline("short_test.timeline.json")
+    assert sent_json[-1][1] == 200
+    assert sent_json[-1][0]["version"] == "1.0.0"
+
+    # Serve by stem
+    h._serve_shorts_timeline("short_test")
+    assert sent_json[-1][1] == 200
+    assert sent_json[-1][0]["version"] == "1.0.0"
+
+    # Serve missing timeline
+    h._serve_shorts_timeline("nonexistent")
+    assert sent_json[-1][1] == 404
+
+    # Traversal attempt
+    h._serve_shorts_timeline("../../secret.json")
+    assert sent_json[-1][1] in (400, 403, 404)
+
+
+def test_pulsecut_client_test_runner():
+    """Verify that PulseCut's client-side ES modules pass their test suite."""
+    proc = subprocess.run(
+        ["node", "--test", "tests/test_pulsecut.test.mjs"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"PulseCut JS tests failed:\n{proc.stdout}\n{proc.stderr}"
+    assert "pass 7" in proc.stdout or "✔" in proc.stdout
+

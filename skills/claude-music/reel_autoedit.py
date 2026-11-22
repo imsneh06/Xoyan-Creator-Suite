@@ -546,10 +546,11 @@ def autoedit_video(
             on_progress("Pro Auto-Editor: Cutting dead air, fillers, and fitting runtime...", 0.45)
         raw_clips = build_clips(words, src_dur)
         clips = fit_to_target(raw_clips, target_duration)
-    clips = [c for c in normalize_clips(clips) if c["end"] - c["start"] >= 0.25]
+    clips = [c for c in normalize_clips(clips) if float(c.get("end", 0)) - float(c.get("start", 0)) >= 0.25]
     if not clips:
-        clips = [{"start": 0.0, "end": min(target_duration, src_dur), "words": []}]
-    final_dur = total_duration(clips)
+        fallback_dur = max(1.0, min(float(target_duration), float(src_dur) if src_dur > 0 else 30.0))
+        clips = [{"start": 0.0, "end": fallback_dur, "words": []}]
+    final_dur = max(0.5, total_duration(clips))
 
     if not clips:
         raise RuntimeError("No valid dialogue clips remained after filtering.")
@@ -595,7 +596,10 @@ def autoedit_video(
     proc = subprocess.run(cmd, cwd=str(work), capture_output=True, text=True)
     if proc.returncode != 0:
         err_msg = proc.stderr.strip() if proc.stderr else "Unknown error"
-        raise RuntimeError(f"FFmpeg render failed (exit {proc.returncode}): {err_msg[-800:]}")
+        hint = ""
+        if "Could not open encoder before EOF" in err_msg or "received no packets" in err_msg:
+            hint = " (Audio or video stream contained 0 packets before EOF; check source file duration and timestamps)"
+        raise RuntimeError(f"FFmpeg render failed (exit {proc.returncode}){hint}: {err_msg[-800:]}")
 
     # Generate thumbnail
     thumb_path = work / f"{out.stem}.jpg"

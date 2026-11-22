@@ -174,6 +174,16 @@ export class TimelineState {
     return this.assets.find(a => a.id === assetId) || null;
   }
 
+  removeAsset(assetId) {
+    const idx = this.assets.findIndex(a => a.id === assetId);
+    if (idx >= 0) {
+      this.assets.splice(idx, 1);
+      this.recordState('Remove Asset');
+      return true;
+    }
+    return false;
+  }
+
   // Tracks Management
   getTrack(trackId) {
     return this.tracks.find(t => t.id === trackId) || null;
@@ -255,6 +265,15 @@ export class TimelineState {
       }
     }
     return false;
+  }
+
+  updateClip(clipId, updates) {
+    const item = this.getClip(clipId);
+    if (!item) return false;
+    Object.assign(item.clip, updates);
+    this._recalculateDuration();
+    this.recordState('Update Clip');
+    return true;
   }
 
   // Clip Operations: Split, Trim, Speed, Volume

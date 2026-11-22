@@ -306,13 +306,13 @@ class ShortsEngine:
 
         dur = float(entry.get("duration") or 30.0)
         ratio = entry.get("aspect_ratio") or "9:16"
-        w, h = (1080, 1920)
+        canvas_w, canvas_h = (1080, 1920)
         if ratio == "1:1":
-            w, h = (1080, 1080)
+            canvas_w, canvas_h = (1080, 1080)
         elif ratio == "4:5":
-            w, h = (1080, 1350)
+            canvas_w, canvas_h = (1080, 1350)
         elif ratio == "16:9":
-            w, h = (1920, 1080)
+            canvas_w, canvas_h = (1920, 1080)
 
         assets = []
         source_fn = entry.get("source_file") or entry.get("filename")
@@ -323,8 +323,8 @@ class ShortsEngine:
                 "name": source_fn,
                 "type": "video",
                 "duration": dur,
-                "width": w,
-                "height": h,
+                "width": canvas_w,
+                "height": canvas_h,
                 "url": f"/api/shorts/video/{entry.get('filename') or source_fn}",
             })
 
@@ -467,8 +467,8 @@ class ShortsEngine:
                 "created_at": int(time.time() * 1000),
                 "updated_at": int(time.time() * 1000),
                 "canvas": {
-                    "width": w,
-                    "height": h,
+                    "width": canvas_w,
+                    "height": canvas_h,
                     "aspect_ratio": ratio,
                     "fps": 30,
                     "duration": dur,

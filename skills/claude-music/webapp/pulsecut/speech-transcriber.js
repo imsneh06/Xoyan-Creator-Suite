@@ -110,6 +110,19 @@ export class SpeechTranscriber {
     return rendered.getChannelData(0);
   }
 
+  segmentSpeechCadence(text, duration = 5.0) {
+    if (!text || typeof text !== 'string') return [];
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    const durPerWord = duration / words.length;
+    return words.map((w, idx) => ({
+      word: w.toUpperCase().replace(/[^A-Z0-9'?!.,]/g, ''),
+      start: parseFloat((idx * durPerWord).toFixed(2)),
+      end: parseFloat(((idx + 1) * durPerWord).toFixed(2)),
+      highlight: false,
+    }));
+  }
+
   _cadenceFallback(audioData) {
     // Generates sensible speech chunks when offline
     return {
