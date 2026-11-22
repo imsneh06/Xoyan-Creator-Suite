@@ -34,10 +34,16 @@ from typing import Any
 
 FILLERS = {"um", "umm", "uh", "uhh", "er", "erm", "hmm", "ah", "mmm", "like", "yeah"}
 GAP = 0.40        # silence longer than this (s) is cut
-PAD = 0.06        # padding kept around each clip (s)
+PAD = 0.10        # padding kept around each clip (s) for natural breath
+TAIL_PAD = 0.35   # extra natural acoustic room (s) at video ending to avoid abrupt cutoffs
 ZOOM = 0.15       # punch-in amount (15%)
 ZOOM_TIME = 0.35  # seconds to reach full zoom
 WORDS_PER_CAPTION = 3
+
+
+def is_sentence_terminator(word: str) -> bool:
+    """Check if a word ends with terminal punctuation or sentence completion."""
+    return bool(re.search(r"[.?!…]+['\"]*$", word.strip()))
 
 
 def get_ffmpeg_bin() -> str:
@@ -202,11 +208,12 @@ def build_clips(words: list[dict[str, Any]], src_dur: float) -> list[dict[str, A
     if cur:
         clips.append(cur)
 
-    # Apply padding without overlapping previous clips
+    # Apply padding without overlapping previous clips; give the final clip an acoustic tail
     prev_end = 0.0
-    for c in clips:
+    for idx, c in enumerate(clips):
         c["start"] = max(c["start"] - PAD, prev_end, 0.0)
-        c["end"] = min(c["end"] + PAD, src_dur)
+        c_tail = TAIL_PAD if idx == len(clips) - 1 else PAD
+        c["end"] = min(c["end"] + c_tail, src_dur)
         prev_end = c["end"]
 
     # Filter out micro-clicks < 0.25s
@@ -239,7 +246,9 @@ def total_duration(clips: list[Any]) -> float:
 
 
 def fit_to_target(clips: list[Any], target: float) -> list[dict[str, Any]]:
-    """Preserve opening hook (first) and CTA (last); drop least word-dense middle segments."""
+    """Preserve opening hook (first) and CTA/conclusion (last), dropping least word-dense middle segments.
+    Detects natural sentence/thought endings so speech never abruptly cuts off mid-word.
+    """
     clips = normalize_clips(clips)
     if not clips:
         return []
@@ -247,32 +256,47 @@ def fit_to_target(clips: list[Any], target: float) -> list[dict[str, Any]]:
     if target <= 0 or total_duration(clips) <= target:
         return clips
 
+    # Step 1: Drop middle segments with lowest speech density until runtime is close to target
     while total_duration(clips) > target and len(clips) > 2:
         mid_indices = range(1, len(clips) - 1)
-        # Drop clip with lowest speech density (words per second)
         drop_idx = min(
             mid_indices,
             key=lambda i: len(clips[i]["words"]) / max(0.1, clips[i]["end"] - clips[i]["start"])
         )
         clips.pop(drop_idx)
 
-    # Shave trailing excess from the last clip so it never exceeds target
-    excess = total_duration(clips) - target
-    i = len(clips) - 1
-    while excess > 0 and i >= 0:
-        c = clips[i]
-        shave = min(excess, c["end"] - c["start"] - 0.5)
-        if shave > 0:
-            c["end"] -= shave
-            c["words"] = [w for w in c["words"] if w["e"] <= c["end"]]
-            excess -= shave
-        i -= 1
-
-    # Hard cap check: ensure total runtime never exceeds target duration
+    # Step 2: If still exceeding target, find a natural sentence boundary in the final clip
     if total_duration(clips) > target and clips:
-        overflow = total_duration(clips) - target
-        clips[-1]["end"] = max(clips[-1]["start"] + 0.1, clips[-1]["end"] - overflow)
-        clips[-1]["words"] = [w for w in clips[-1]["words"] if w["e"] <= clips[-1]["end"]]
+        last = clips[-1]
+        words = last.get("words", [])
+        dur_others = sum(float(c["end"] - c["start"]) for c in clips[:-1])
+        remaining_budget = max(1.5, target - dur_others)
+
+        best_word_idx = None
+        best_diff = 999.0
+
+        if words:
+            for w_i, w in enumerate(words):
+                w_dur = (w["e"] + TAIL_PAD) - last["start"]
+                diff = abs(w_dur - remaining_budget)
+                is_sentence = is_sentence_terminator(w.get("w", ""))
+
+                # Prioritize sentence endings within or near remaining budget
+                score = diff if is_sentence else (diff + 2.0)
+                if (w_dur <= remaining_budget + 1.5) and score < best_diff:
+                    best_diff = score
+                    best_word_idx = w_i
+
+            if best_word_idx is not None:
+                chosen_w = words[best_word_idx]
+                last["end"] = round(chosen_w["e"] + TAIL_PAD, 3)
+                last["words"] = words[:best_word_idx + 1]
+
+        # Step 3: Gentle hard-cap fallback if no word boundaries were found
+        if total_duration(clips) > target + 1.0 and clips:
+            overflow = total_duration(clips) - target
+            clips[-1]["end"] = max(clips[-1]["start"] + 0.5, clips[-1]["end"] - overflow)
+            clips[-1]["words"] = [w for w in clips[-1].get("words", []) if w["e"] <= clips[-1]["end"]]
 
     return clips
 
@@ -359,6 +383,7 @@ def build_filter_graph(
     clips = normalize_clips(clips)
     parts = []
     n = len(clips)
+    total_dur = sum(float(c["end"] - c["start"]) for c in clips) if clips else 30.0
 
     for i, c in enumerate(clips):
         d = c["end"] - c["start"]
@@ -414,7 +439,17 @@ def build_filter_graph(
         clean_captions = captions_filename.replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
         ass_filter = f",ass=filename='{clean_captions}'"
 
-    parts.append(f"[vc]{grade_filter}{pbar_filter}{ass_filter}[vout]")
+    # Smooth outro fade: video fades smoothly to black in the final 0.35s,
+    # and audio fades out gently in the final 0.50s, preventing any abrupt clipping.
+    v_fade = ""
+    a_fade = ""
+    if total_dur > 1.5:
+        fade_v_start = max(0.1, total_dur - 0.35)
+        fade_a_start = max(0.1, total_dur - 0.50)
+        v_fade = f",fade=t=out:st={fade_v_start:.3f}:d=0.35"
+        a_fade = f",afade=t=out:st={fade_a_start:.3f}:d=0.50"
+
+    parts.append(f"[vc]{grade_filter}{pbar_filter}{ass_filter}{v_fade}[vout]")
 
     # Audio enhancement: High-pass 80 Hz, FFT denoise (-25 dB), compression, 3 kHz presence EQ
     if has_source_audio:
@@ -433,12 +468,12 @@ def build_filter_graph(
         parts.append(
             "[sp2][duck]amix=inputs=2:duration=first:normalize=0,"
             "aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
-            "loudnorm=I=-14:TP=-1:LRA=11[aout]"
+            f"loudnorm=I=-14:TP=-1:LRA=11{a_fade}[aout]"
         )
     else:
         parts.append(
             f"[ac]{voice},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,"
-            "loudnorm=I=-14:TP=-1:LRA=11[aout]"
+            f"loudnorm=I=-14:TP=-1:LRA=11{a_fade}[aout]"
         )
 
     return ";\n".join(parts)
@@ -481,14 +516,31 @@ def autoedit_video(
     if not words:
         if on_progress:
             on_progress("Pro Auto-Editor: Non-speech / ambient audio detected — calculating rhythmic visual cuts...", 0.45)
-        step = max(4.0, src_dur / max(1.0, float(int(src_dur // 6))))
-        cur = 0.0
-        raw_clips = []
-        while cur < src_dur and (len(raw_clips) * 4.0) < target_duration:
-            clip_end = min(cur + min(4.0, target_duration - (len(raw_clips) * 4.0)), src_dur)
-            raw_clips.append({"start": round(cur, 2), "end": round(clip_end, 2), "words": []})
-            cur += step
-        clips = raw_clips if raw_clips else [{"start": 0.0, "end": min(target_duration, src_dur), "words": []}]
+        # If source video is already approximately target duration, preserve the full arc
+        # without skipping sections, dividing into continuous cuts for punch-in dynamics
+        if src_dur <= target_duration + 3.0:
+            effective_dur = min(src_dur, target_duration) if target_duration > 0 else src_dur
+            cut_len = 4.0
+            num_cuts = max(1, int(round(effective_dur / cut_len)))
+            actual_step = effective_dur / num_cuts
+            raw_clips = []
+            cur = 0.0
+            for i in range(num_cuts):
+                nxt = effective_dur if i == num_cuts - 1 else round(cur + actual_step, 3)
+                raw_clips.append({"start": round(cur, 3), "end": nxt, "words": []})
+                cur = nxt
+            clips = raw_clips
+        else:
+            # For longer files: extract rhythmic continuous sections up to target_duration
+            cut_len = 4.0
+            num_cuts = max(1, int(round(target_duration / cut_len)))
+            stride = (src_dur - cut_len) / max(1, num_cuts - 1)
+            raw_clips = []
+            for i in range(num_cuts):
+                start_c = round(i * stride, 3)
+                end_c = round(min(src_dur, start_c + cut_len), 3)
+                raw_clips.append({"start": start_c, "end": end_c, "words": []})
+            clips = raw_clips
     else:
         if on_progress:
             on_progress("Pro Auto-Editor: Cutting dead air, fillers, and fitting runtime...", 0.45)
@@ -531,7 +583,7 @@ def autoedit_video(
     cmd.extend([
         "-filter_complex", filter_complex,
         "-map", "[vout]", "-map", "[aout]",
-        "-t", f"{target_duration:.2f}",
+        "-t", f"{final_dur:.2f}",
         "-c:v", "libx264", "-preset", "medium", "-b:v", "11M", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
         str(out.resolve())

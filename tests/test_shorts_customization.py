@@ -233,3 +233,50 @@ def test_reel_clips_tuple_and_dict_normalization(tmp_path):
     assert total_duration(fitted) <= 15.0
 
 
+def test_fit_to_target_preserves_sentence_boundary_ending():
+    from reel_autoedit import fit_to_target
+
+    # 3 clips where the last clip has distinct sentence boundary words
+    clips = [
+        {"start": 0.0, "end": 10.0, "words": [{"w": "Hook", "s": 0.5, "e": 2.0}]},
+        {"start": 10.0, "end": 20.0, "words": [{"w": "Filler", "s": 10.5, "e": 12.0}]},
+        {
+            "start": 20.0, "end": 38.0,
+            "words": [
+                {"w": "First", "s": 20.5, "e": 21.5},
+                {"w": "point.", "s": 21.6, "e": 22.5},  # Sentence 1 ends here!
+                {"w": "And", "s": 23.0, "e": 23.5},
+                {"w": "here", "s": 23.6, "e": 24.0},
+                {"w": "is", "s": 24.1, "e": 24.5},
+                {"w": "the", "s": 24.6, "e": 25.0},
+                {"w": "conclusion!", "s": 25.1, "e": 26.5},  # Sentence 2 ends here!
+                {"w": "Extra", "s": 27.0, "e": 28.0},
+                {"w": "unneeded", "s": 28.1, "e": 29.5},
+                {"w": "rambling", "s": 29.6, "e": 31.0},
+                {"w": "words", "s": 31.1, "e": 33.0},
+            ]
+        }
+    ]
+
+    # Target 20.0s: clip 0 (10s) + clip 2 should end on "conclusion!" (26.5s) instead of mid-word
+    fitted = fit_to_target(clips, target=20.0)
+    last_words = [w["w"] for w in fitted[-1]["words"]]
+    assert "conclusion!" in last_words
+    assert "rambling" not in last_words
+
+
+def test_reel_filter_graph_smooth_outro_fades():
+    dummy_clips = [
+        {"start": 0.0, "end": 10.0, "words": []},
+    ]
+    vf = build_filter_graph(
+        clips=dummy_clips,
+        captions_filename=None,
+        has_music=True,
+        has_source_audio=True,
+    )
+    # Both video outro fade-to-black and audio outro fade-out should be present
+    assert "fade=t=out:st=9.650:d=0.35" in vf
+    assert "afade=t=out:st=9.500:d=0.50" in vf
+
+

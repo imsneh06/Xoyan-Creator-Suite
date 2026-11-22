@@ -644,7 +644,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             on_progress("Extracting viral hooks via speech cadence and questions...", 0.6)
 
         highlights = []
-        target_duration = 45.0
+        target_duration = 32.0
         total_duration = transcript.get("duration") or (segments[-1]["end"] if segments else 45.0)
 
         kw_clean = keyword.strip().lower()
@@ -700,12 +700,41 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if len(highlights) >= num_clips:
                 break
             start_t = max(0.0, start_seg["start"] - 0.5)
-            end_t = min(total_duration, start_t + target_duration)
+            target_end = start_t + target_duration
 
-            for seg in segments[idx:]:
-                if seg["end"] >= start_t + 28.0:
-                    end_t = seg["end"]
+            # Detect proper sentence / thought completion ending instead of arbitrary cutoff
+            best_end = None
+            best_score = 999.0
+
+            for s_i, seg in enumerate(segments[idx:], start=idx):
+                s_end = float(seg["end"])
+                if s_end < start_t + 18.0:
+                    continue
+                if s_end > target_end + 8.0:
                     break
+
+                text = seg.get("text", "").strip()
+                dist = abs(s_end - target_end)
+
+                # Check sentence terminal punctuation
+                is_sentence = bool(re.search(r"[.?!…]+['\"]*$", text))
+                has_pause = False
+                if s_i + 1 < len(segments):
+                    next_s = float(segments[s_i + 1]["start"])
+                    if next_s - s_end >= 0.35:
+                        has_pause = True
+                else:
+                    has_pause = True
+
+                cand_score = dist if is_sentence else (dist + 3.0 if has_pause else dist + 12.0)
+                if cand_score < best_score:
+                    best_score = cand_score
+                    best_end = s_end
+
+            if best_end is not None:
+                end_t = min(total_duration, round(best_end + 0.30, 2))
+            else:
+                end_t = min(total_duration, round(target_end, 2))
 
             if any(not (end_t <= r[0] or start_t >= r[1]) for r in selected_ranges):
                 continue
@@ -962,20 +991,28 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 filter_complex += f";{v_map}ass=filename='{clean_ass}'[v_out]"
                 v_map = "[v_out]"
 
+            # Smooth outro transitions: video fade-out to black (0.35s) and audio fade-out (0.45s)
+            fade_v_start = max(0.1, clip_duration - 0.35)
+            fade_a_start = max(0.1, clip_duration - 0.45)
+            filter_complex += f";{v_map}fade=t=out:st={fade_v_start:.3f}:d=0.35[v_faded]"
+            v_map = "[v_faded]"
+
             # Audio setup: check if background music is requested or if source has audio
             if bg_music_path and bg_music_path.exists():
                 inputs.extend(["-i", str(bg_music_path.resolve())])
                 if has_source_audio:
-                    filter_complex += ";[2:a]volume=0.20,aloop=loop=-1:size=2e+09[bg];[1:a][bg]amix=inputs=2:duration=first[a_out]"
+                    filter_complex += f";[2:a]volume=0.20,aloop=loop=-1:size=2e+09[bg];[1:a][bg]amix=inputs=2:duration=first,afade=t=out:st={fade_a_start:.3f}:d=0.45[a_out]"
                 else:
-                    filter_complex += ";[2:a]volume=0.85,aloop=loop=-1:size=2e+09[a_out]"
+                    filter_complex += f";[2:a]volume=0.85,aloop=loop=-1:size=2e+09,afade=t=out:st={fade_a_start:.3f}:d=0.45[a_out]"
                 a_map = "[a_out]"
             elif has_source_audio:
-                a_map = "1:a:0"
+                filter_complex += f";[1:a]afade=t=out:st={fade_a_start:.3f}:d=0.45[a_out]"
+                a_map = "[a_out]"
             else:
                 # Video has no audio track and no background music: synthesize silent stereo audio stream
                 inputs.extend(["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"])
-                a_map = "2:a"
+                filter_complex += f";[2:a]afade=t=out:st={fade_a_start:.3f}:d=0.45[a_out]"
+                a_map = "[a_out]"
 
             merge_cmd = inputs + [
                 "-filter_complex", filter_complex,

@@ -132,7 +132,15 @@ def load_config():
 
 def resolve_output_dir(cfg):
     raw = cfg.get("output_dir") or "~/Music/claude-music-output"
-    return Path(os.path.expanduser(raw)).resolve()
+    try:
+        p = Path(os.path.expanduser(raw)).resolve()
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    except Exception:
+        # Fallback to local workspace output directory if user folder has permission/sandbox restrictions
+        fallback = Path(__file__).resolve().parent.parent.parent.parent / "output"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
 
 
 def save_output_dir(raw):
