@@ -1661,6 +1661,18 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/shorts/combine":
                 body = self._read_body() or {}
                 self._handle_shorts_combine(body)
+            elif path == "/api/shorts/analyze-order":
+                body = self._read_body() or {}
+                self._handle_shorts_analyze_order(body)
+            elif path == "/api/voiceover/extract":
+                body = self._read_body() or {}
+                self._handle_voiceover_extract(body)
+            elif path == "/api/voiceover/enhance-audio":
+                body = self._read_body() or {}
+                self._handle_voiceover_enhance_audio(body)
+            elif path == "/api/voiceover/enhance-text":
+                body = self._read_body() or {}
+                self._handle_voiceover_enhance_text(body)
             else:
                 self._json({"error": "not found"}, 404)
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
@@ -2013,6 +2025,109 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"error": "Voiceover synthesis timed out after 60s. Please try a shorter script or check internet connection."}, 504)
         except Exception as e:
             self._json({"error": f"Voiceover failed: {e}"}, 500)
+
+    def _handle_shorts_analyze_order(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Shorts engine is not available"}, 503)
+            return
+        clips = body.get("clips") or []
+        if not clips or not isinstance(clips, list):
+            self._json({"error": "List of clips is required"}, 400)
+            return
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+
+        clip_paths = []
+        for c in clips:
+            c_str = str(c).strip()
+            if not c_str:
+                continue
+            p = Path(c_str)
+            if not p.is_absolute():
+                candidates = [out_dir / "uploads" / c_str, out_dir / "shorts" / c_str, out_dir / c_str]
+                found = next((cand for cand in candidates if cand.exists()), None)
+                if found:
+                    clip_paths.append(found)
+                else:
+                    clip_paths.append(p)
+            else:
+                clip_paths.append(p)
+
+        try:
+            ordered = engine.analyze_and_order_clips(clip_paths)
+            self._json({"ok": True, "clips": ordered})
+        except Exception as e:
+            self._json({"error": f"Failed to analyze clips: {e}"}, 500)
+
+    def _handle_voiceover_extract(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Engine is not available"}, 503)
+            return
+        source = str(body.get("source", "")).strip()
+        if not source:
+            self._json({"error": "Media source file is required"}, 400)
+            return
+        out_dir = self._output_dir()
+        p = Path(source)
+        if not p.is_absolute():
+            candidates = [out_dir / "uploads" / source, out_dir / "shorts" / source, out_dir / source]
+            found = next((cand for cand in candidates if cand.exists()), None)
+            if found:
+                p = found
+        if not p.exists():
+            self._json({"error": f"File not found: {source}"}, 404)
+            return
+
+        engine = ShortsEngine(out_dir)
+        try:
+            res = engine.extract_voiceover_and_captions(p)
+            self._json(res)
+        except Exception as e:
+            self._json({"error": f"Extraction failed: {e}"}, 500)
+
+    def _handle_voiceover_enhance_audio(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Engine is not available"}, 503)
+            return
+        filename = str(body.get("file", "")).strip()
+        preset = str(body.get("preset", "studio")).strip()
+        if not filename:
+            self._json({"error": "Audio file is required"}, 400)
+            return
+        out_dir = self._output_dir()
+        p = Path(filename)
+        if not p.is_absolute():
+            candidates = [out_dir / filename, out_dir / "uploads" / filename, out_dir / "shorts" / filename]
+            found = next((cand for cand in candidates if cand.exists()), None)
+            if found:
+                p = found
+        if not p.exists():
+            self._json({"error": f"Audio file not found: {filename}"}, 404)
+            return
+
+        engine = ShortsEngine(out_dir)
+        try:
+            enhanced_path = engine.enhance_voiceover_audio(p, preset=preset)
+            self._json({"ok": True, "file": enhanced_path.name, "path": str(enhanced_path.resolve()), "preset": preset})
+        except Exception as e:
+            self._json({"error": f"Audio enhancement failed: {e}"}, 500)
+
+    def _handle_voiceover_enhance_text(self, body):
+        if ShortsEngine is None:
+            self._json({"error": "Engine is not available"}, 503)
+            return
+        text = str(body.get("text", "")).strip()
+        mode = str(body.get("mode", "hook")).strip()
+        if not text:
+            self._json({"error": "Text is required to enhance"}, 400)
+            return
+        out_dir = self._output_dir()
+        engine = ShortsEngine(out_dir)
+        try:
+            enhanced = engine.enhance_caption_text(text, mode=mode)
+            self._json({"ok": True, "text": enhanced, "mode": mode})
+        except Exception as e:
+            self._json({"error": f"Text enhancement failed: {e}"}, 500)
 
 
 def serve(port=8765, max_port=8775):

@@ -1283,6 +1283,227 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         self.save_library_entry(entry)
         return entry
 
+    def analyze_and_order_clips(
+        self,
+        clip_paths: list[Path],
+    ) -> list[dict[str, Any]]:
+        """Analyze multiple video clips (e.g. 15-20s each) and automatically order them into
+        a coherent narrative arc: [Hook] -> [Story / Body Points] -> [Call to Action / Ending].
+        """
+        valid_clips = [p for p in clip_paths if p.exists() and p.stat().st_size > 0]
+        if not valid_clips:
+            return []
+        if len(valid_clips) == 1:
+            dur = probe_duration(valid_clips[0])
+            return [{
+                "path": str(valid_clips[0].resolve()),
+                "filename": valid_clips[0].name,
+                "duration": round(dur, 2),
+                "role": "🎯 Hook & Story",
+                "score": 95,
+                "reason": "Single clip ready for reel auto-editing.",
+            }]
+
+        clip_data = []
+        for p in valid_clips:
+            dur = probe_duration(p)
+            has_audio = has_audio_stream(p)
+            snippet_text = ""
+            cache_file = self.output_dir / ".claude-music" / "transcripts" / f"{p.stem}.json"
+            if cache_file.exists():
+                try:
+                    with cache_file.open(encoding="utf-8-sig") as f:
+                        data = json.load(f)
+                        segs = data.get("segments", [])
+                        snippet_text = " ".join(s.get("text", "") for s in segs)
+                except Exception:
+                    pass
+
+            text_lower = snippet_text.lower()
+            hook_words = ["why", "how", "wait", "secret", "never", "did you know", "stop", "check", "look", "what", "first", "truth", "money", "mistake"]
+            cta_words = ["follow", "subscribe", "like", "comment", "share", "part 2", "link", "bio", "save", "thanks", "finally", "in conclusion", "next"]
+
+            hook_score = 50.0
+            cta_score = 50.0
+
+            if "?" in text_lower:
+                hook_score += 30.0
+            if any(w in text_lower for w in hook_words):
+                hook_score += 25.0
+            if any(w in text_lower for w in cta_words):
+                cta_score += 40.0
+
+            # Favor punchy 10-25s clips as hooks
+            if 10.0 <= dur <= 25.0:
+                hook_score += 15.0
+
+            clip_data.append({
+                "path": str(p.resolve()),
+                "filename": p.name,
+                "duration": round(dur, 2),
+                "has_audio": has_audio,
+                "text": snippet_text,
+                "hook_score": hook_score,
+                "cta_score": cta_score,
+            })
+
+        best_hook = max(clip_data, key=lambda c: c["hook_score"])
+        remaining = [c for c in clip_data if c != best_hook]
+        best_cta = max(remaining, key=lambda c: c["cta_score"]) if remaining else None
+        body_clips = [c for c in remaining if c != best_cta]
+
+        ordered = []
+        best_hook["role"] = "🎯 Hook (Opener)"
+        best_hook["reason"] = "High curiosity gap & energetic opening statement."
+        ordered.append(best_hook)
+
+        for i, c in enumerate(body_clips):
+            c["role"] = f"📖 Point #{i+1} (Body)"
+            c["reason"] = "Core demonstration & storytelling point."
+            ordered.append(c)
+
+        if best_cta:
+            best_cta["role"] = "🏁 Call to Action / Climax"
+            best_cta["reason"] = "Natural concluding takeaway & engagement driver."
+            ordered.append(best_cta)
+
+        return ordered
+
+    def extract_voiceover_and_captions(self, media_path: Path) -> dict[str, Any]:
+        """Extract isolated voiceover audio and speech transcript/captions from video or audio."""
+        if not media_path.exists():
+            raise FileNotFoundError(f"Media file {media_path} not found.")
+
+        ffmpeg_bin = get_ffmpeg_bin()
+        ts = int(time.time())
+        out_audio = self.output_dir / f"extracted_vo_{ts}.mp3"
+
+        # Demux audio into clean 192k MP3
+        cmd = [
+            ffmpeg_bin, "-y", "-loglevel", "error",
+            "-i", str(media_path.resolve()),
+            "-vn", "-acodec", "libmp3lame", "-b:a", "192k", "-ar", "44100",
+            str(out_audio.resolve())
+        ]
+        self._run_cmd(cmd)
+
+        dur = probe_duration(out_audio)
+        transcript_data = self.transcribe(media_path)
+        segs = transcript_data.get("segments", [])
+        full_text = " ".join(s.get("text", "") for s in segs).strip()
+        if not full_text and segs:
+            full_text = " ".join(w.get("word", "") for s in segs for w in s.get("words", [])).strip()
+
+        return {
+            "ok": True,
+            "audio_file": out_audio.name,
+            "audio_path": str(out_audio.resolve()),
+            "duration": round(dur, 2),
+            "text": full_text or "Audio track extracted successfully.",
+            "segments": segs,
+        }
+
+    def enhance_voiceover_audio(
+        self,
+        audio_path: Path,
+        preset: str = "studio",
+        output_path: Path | None = None,
+    ) -> Path:
+        """Apply professional broadcast DSP chains to voiceover audio."""
+        if not audio_path.exists():
+            raise FileNotFoundError(f"Audio file {audio_path} not found.")
+
+        ffmpeg_bin = get_ffmpeg_bin()
+        if not output_path:
+            ts = int(time.time())
+            output_path = audio_path.parent / f"{audio_path.stem}_{preset}_{ts}.mp3"
+
+        if preset == "studio":
+            # High-pass 80 Hz, FFT denoise, presence boost at 3.2 kHz, gentle vocal compressor, loudnorm -14 LUFS
+            af = (
+                "highpass=f=80,afftdn=nf=-22,"
+                "equalizer=f=3200:t=q:w=1.2:g=2.5,"
+                "acompressor=threshold=-18dB:ratio=3.5:attack=10:release=100,"
+                "loudnorm=I=-14:TP=-1:LRA=10"
+            )
+        elif preset == "warmth":
+            # Warm radio broadcast sound: 180 Hz body presence, high shelf smoothing, compressor, loudnorm
+            af = (
+                "highpass=f=60,"
+                "equalizer=f=180:t=q:w=1.0:g=2.8,"
+                "equalizer=f=8000:t=q:w=1.0:g=-1.0,"
+                "acompressor=threshold=-16dB:ratio=3.0:attack=15:release=120,"
+                "loudnorm=I=-14:TP=-1:LRA=10"
+            )
+        else:  # "loudnorm"
+            af = "loudnorm=I=-14:TP=-1:LRA=11"
+
+        cmd = [
+            ffmpeg_bin, "-y", "-loglevel", "error",
+            "-i", str(audio_path.resolve()),
+            "-af", af,
+            "-c:a", "libmp3lame", "-b:a", "192k",
+            str(output_path.resolve())
+        ]
+        self._run_cmd(cmd)
+        return output_path
+
+    def enhance_caption_text(self, text: str, mode: str = "hook") -> str:
+        """Enhance transcript text for viral retention and readability."""
+        text = text.strip()
+        if not text:
+            return ""
+
+        if mode == "hook":
+            sentences = re.split(r"([.?!]+)", text)
+            first_sent = (sentences[0] + (sentences[1] if len(sentences) > 1 else "")).strip()
+            rest = "".join(sentences[2:]).strip()
+
+            hook_prefixes = [
+                "Stop scrolling! Here is what nobody tells you: ",
+                "Wait until you see this: ",
+                "The secret that changed everything: ",
+                "Here is why this will blow your mind: ",
+            ]
+            import random
+            if not any(first_sent.lower().startswith(w) for w in ["why", "how", "wait", "stop", "check", "secret"]):
+                first_sent = f"🚨 {random.choice(hook_prefixes)}{first_sent}"
+            else:
+                first_sent = f"🔥 {first_sent}"
+            return f"{first_sent}\n\n{rest}" if rest else first_sent
+
+        elif mode == "hormozi":
+            power_words = {
+                "money", "secret", "never", "always", "stop", "truth", "mistake",
+                "warning", "results", "best", "worst", "free", "now", "proven", "hack",
+                "rules", "easy", "crazy", "fast", "huge", "instant", "win", "lose"
+            }
+            words = text.split()
+            formatted = []
+            for w in words:
+                clean = re.sub(r"[^\w]", "", w.lower())
+                if clean in power_words or len(clean) >= 8:
+                    punct = "".join(ch for ch in w if not ch.isalnum())
+                    formatted.append(f"{clean.upper()}{punct}")
+                else:
+                    formatted.append(w)
+            lines = []
+            cur_line = []
+            for w in formatted:
+                cur_line.append(w)
+                if len(cur_line) >= 4 or w.endswith((".", "?", "!")):
+                    lines.append(" ".join(cur_line))
+                    cur_line = []
+            if cur_line:
+                lines.append(" ".join(cur_line))
+            return "\n".join(lines)
+
+        else:  # "grammar"
+            clean = re.sub(r"\b(um|umm|uh|uhh|er|erm|hmm|ah|like,)\b", "", text, flags=re.IGNORECASE)
+            clean = re.sub(r"\s+", " ", clean).strip()
+            clean = re.sub(r"(^[a-z]|[.?!]\s+[a-z])", lambda m: m.group(0).upper(), clean)
+            return clean
+
     def generate_music_video(
         self,
         audio_path: Path,

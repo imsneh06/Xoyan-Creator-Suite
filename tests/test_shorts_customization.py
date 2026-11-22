@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -278,5 +279,55 @@ def test_reel_filter_graph_smooth_outro_fades():
     # Both video outro fade-to-black and audio outro fade-out should be present
     assert "fade=t=out:st=9.650:d=0.35" in vf
     assert "afade=t=out:st=9.500:d=0.50" in vf
+
+
+def test_shorts_engine_analyze_and_order_clips(tmp_path):
+    engine = ShortsEngine(tmp_path)
+    # Create 3 dummy clips
+    c1 = tmp_path / "clip_story.mp4"
+    c2 = tmp_path / "clip_hook.mp4"
+    c3 = tmp_path / "clip_cta.mp4"
+    for c in [c1, c2, c3]:
+        c.write_bytes(b"dummy")
+
+    # Mock transcripts in cache
+    t_dir = tmp_path / ".claude-music" / "transcripts"
+    t_dir.mkdir(parents=True, exist_ok=True)
+    (t_dir / f"{c1.stem}.json").write_text(json.dumps({"segments": [{"text": "So this happened during development."}]}))
+    (t_dir / f"{c2.stem}.json").write_text(json.dumps({"segments": [{"text": "Did you know the biggest secret about this?"}]}))
+    (t_dir / f"{c3.stem}.json").write_text(json.dumps({"segments": [{"text": "Follow and share for part 2!"}]}))
+
+    ordered = engine.analyze_and_order_clips([c1, c2, c3])
+    assert len(ordered) == 3
+    # c2 had question & secret -> Hook (first)
+    assert ordered[0]["filename"] == "clip_hook.mp4"
+    assert "Hook" in ordered[0]["role"]
+    # c3 had follow & part 2 -> CTA (last)
+    assert ordered[-1]["filename"] == "clip_cta.mp4"
+    assert "Call to Action" in ordered[-1]["role"]
+    # c1 is body (middle)
+    assert ordered[1]["filename"] == "clip_story.mp4"
+
+
+def test_shorts_engine_enhance_caption_text(tmp_path):
+    engine = ShortsEngine(tmp_path)
+
+    # 1. Hook mode
+    raw_text = "I built an autonomous trading bot in three days."
+    hooked = engine.enhance_caption_text(raw_text, mode="hook")
+    assert "I built an autonomous trading bot" in hooked
+    assert any(h in hooked for h in ["Stop scrolling", "Wait until", "secret", "blow your mind", "🔥", "🚨"])
+
+    # 2. Hormozi mode: capitalizes power words
+    hormozi_raw = "This is the secret to make money fast without mistake"
+    hormozi_res = engine.enhance_caption_text(hormozi_raw, mode="hormozi")
+    assert "SECRET" in hormozi_res
+    assert "MONEY" in hormozi_res
+
+    # 3. Grammar mode: cleans fillers and capitalizes
+    grammar_raw = "um so like, we tested this. and uh it worked."
+    grammar_res = engine.enhance_caption_text(grammar_raw, mode="grammar")
+    assert "um" not in grammar_res.lower().split()
+    assert "uh" not in grammar_res.lower().split()
 
 

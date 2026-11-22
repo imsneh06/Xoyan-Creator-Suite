@@ -1442,6 +1442,32 @@
         </div>
       </div>
 
+      <!-- Multi-Clip Sequencer (shown when multiple 15-20s clips are staged) -->
+      <div id="shorts-multi-clip-container" style="display:none; margin-top:16px; padding:14px; background:var(--well); border:1px solid var(--line); border-radius:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+          <div>
+            <span class="eyebrow" style="color:var(--brand); font-size:12px;">🎬 Multi-Clip Reel Sequencer</span>
+            <div style="font-size:13px; font-weight:600; margin-top:2px;" id="multi-clip-summary">0 clips &middot; 0s combined</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn" id="btn-auto-order-clips" style="background:var(--card); font-weight:600; color:var(--brand); display:inline-flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              ✨ Analyze & Auto-Order Clips
+            </button>
+            <button type="button" class="btn" id="btn-reverse-clips" style="background:var(--card); font-size:12px;">
+              🔄 Reverse Order
+            </button>
+            <button type="button" class="btn" id="btn-clear-clips" style="background:var(--card); color:#ef4444; font-size:12px;">
+              Clear All
+            </button>
+          </div>
+        </div>
+        <p class="subtext" style="margin-bottom:12px; font-size:12px;">
+          Clips will be combined into a single dynamic short. Click <strong>Analyze & Auto-Order</strong> to detect hooks and CTAs, or use <strong>↑ / ↓</strong> to manually adjust playback order.
+        </p>
+        <div id="multi-clip-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
       <div class="row" style="margin-top:18px; align-items:flex-end; flex-wrap:wrap; gap:12px;">
         <div class="field" style="flex-direction:column; align-items:flex-start;">
           <label class="field-label">Editing Engine</label>
@@ -1762,6 +1788,21 @@
 
   <div id="view-voiceover" style="display:none; flex-direction:column; gap:20px;">
     <div class="card">
+      <!-- Extraction Box -->
+      <div style="padding:14px; background:var(--well); border:1px solid var(--line); border-radius:10px; margin-bottom:18px;">
+        <div class="eyebrow" style="color:var(--brand); font-size:12px; margin-bottom:6px;">🎙️ Extract Voiceover & Captions from Media</div>
+        <p class="subtext" style="font-size:12px; margin-bottom:12px;">Drop any video (Reel, Short, clip) or audio file to isolate the speech track and transcribe captions directly into the script editor.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <input class="title-input mono" id="vo-extract-source" placeholder="C:\path\to\video_or_audio.mp4 or select file..." style="flex:1; font-size:12px;">
+          <button type="button" class="btn" id="vo-browse-btn" style="white-space:nowrap; font-size:12px;">Browse File...</button>
+          <input type="file" id="vo-file-input" accept="video/*,audio/*" style="display:none">
+          <button type="button" class="btn-primary" id="vo-extract-btn" style="white-space:nowrap; font-size:12px; padding:7px 16px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+            Extract Speech & Captions
+          </button>
+        </div>
+      </div>
+
       <h2>Neural AI Voiceover Generator</h2>
       <p class="subtext">Generate human-grade, expressive speech for your Shorts, TikToks, and podcasts with zero cloud fees using Edge Neural TTS.</p>
 
@@ -1769,6 +1810,18 @@
         <label class="field-label">Voiceover Script</label>
         <div class="composer">
           <textarea id="vo-text" maxlength="4000" placeholder="Type or paste your voiceover script here... (e.g. 'Did you know that 99% of producers make this one mistake when mastering vertical audio?')"></textarea>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center;">
+          <span class="field-label" style="margin:0; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Enhance Script:</span>
+          <button type="button" class="btn" id="vo-enhance-hook" style="font-size:12px; font-weight:600; padding:4px 10px; background:var(--well);">
+            ⚡ Viral Hook Booster
+          </button>
+          <button type="button" class="btn" id="vo-enhance-hormozi" style="font-size:12px; font-weight:600; padding:4px 10px; background:var(--well);">
+            🔥 Format Hormozi Caps
+          </button>
+          <button type="button" class="btn" id="vo-enhance-grammar" style="font-size:12px; font-weight:600; padding:4px 10px; background:var(--well);">
+            ✨ Auto-Punctuate & Clean
+          </button>
         </div>
       </div>
 
@@ -1802,6 +1855,21 @@
               Use in Shorts Studio
             </button>
             <a class="btn" id="vo-download-link" download>Download MP3</a>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--line);">
+          <span class="field-label" style="margin-bottom:8px; display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Enhance Audio Track:</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn" id="vo-audio-studio" style="font-size:12px; font-weight:600;">
+              🎙️ Studio Clarity (Denoise & EQ)
+            </button>
+            <button type="button" class="btn" id="vo-audio-warmth" style="font-size:12px; font-weight:600;">
+              📻 Broadcast Warmth
+            </button>
+            <button type="button" class="btn" id="vo-audio-loudnorm" style="font-size:12px; font-weight:600;">
+              🔊 Master to -14 LUFS
+            </button>
           </div>
         </div>
       </div>
@@ -3141,13 +3209,196 @@ sDrop.ondrop = async e => {
   await uploadMultipleOfflineVideos(files);
 };
 
+let stagedClips = [];
+
+function renderMultiClipSequencer() {
+  const container = $('shorts-multi-clip-container');
+  const list = $('multi-clip-list');
+  const summary = $('multi-clip-summary');
+  if (!container || !list) return;
+
+  if (stagedClips.length <= 1) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  list.innerHTML = '';
+
+  const totalDur = stagedClips.reduce((acc, c) => acc + (parseFloat(c.duration) || 16.0), 0);
+  summary.textContent = `${stagedClips.length} clips · ~${Math.round(totalDur)}s combined runtime`;
+
+  stagedClips.forEach((c, idx) => {
+    const card = document.createElement('div');
+    card.style = 'display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--card); border:1px solid var(--line); border-radius:6px; gap:8px;';
+
+    const left = document.createElement('div');
+    left.style = 'display:flex; align-items:center; gap:10px; flex:1; min-width:0;';
+
+    const numBadge = document.createElement('span');
+    numBadge.className = 'mono';
+    numBadge.style = 'font-weight:700; font-size:12px; background:var(--well); padding:2px 8px; border-radius:4px; border:1px solid var(--line);';
+    numBadge.textContent = `#${idx + 1}`;
+
+    const roleBadge = document.createElement('span');
+    roleBadge.style = 'font-size:11px; font-weight:600; padding:2px 6px; border-radius:4px;';
+    if (idx === 0) {
+      roleBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+      roleBadge.style.color = '#ef4444';
+      roleBadge.textContent = c.role || '🎯 Hook';
+    } else if (idx === stagedClips.length - 1) {
+      roleBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+      roleBadge.style.color = '#10b981';
+      roleBadge.textContent = c.role || '🏁 CTA / Ending';
+    } else {
+      roleBadge.style.background = 'rgba(59, 130, 246, 0.15)';
+      roleBadge.style.color = '#3b82f6';
+      roleBadge.textContent = c.role || `📖 Point #${idx}`;
+    }
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'mono';
+    titleSpan.style = 'font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:260px;';
+    titleSpan.textContent = c.name || c.filename || (c.path ? c.path.split(/[\\/]/).pop() : 'Clip');
+    titleSpan.title = c.path || '';
+
+    const durSpan = document.createElement('span');
+    durSpan.className = 'mono';
+    durSpan.style = 'font-size:11px; color:var(--muted);';
+    durSpan.textContent = c.duration ? `${c.duration}s` : '';
+
+    left.appendChild(numBadge);
+    left.appendChild(roleBadge);
+    left.appendChild(titleSpan);
+    if (c.duration) left.appendChild(durSpan);
+
+    const right = document.createElement('div');
+    right.style = 'display:flex; align-items:center; gap:4px;';
+
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button';
+    upBtn.className = 'btn btn-icon';
+    upBtn.style = 'padding:2px 6px; font-size:11px;';
+    upBtn.textContent = '↑';
+    upBtn.title = 'Move Earlier';
+    upBtn.disabled = idx === 0;
+    upBtn.onclick = () => {
+      const temp = stagedClips[idx];
+      stagedClips[idx] = stagedClips[idx - 1];
+      stagedClips[idx - 1] = temp;
+      syncStagedClips();
+    };
+
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button';
+    downBtn.className = 'btn btn-icon';
+    downBtn.style = 'padding:2px 6px; font-size:11px;';
+    downBtn.textContent = '↓';
+    downBtn.title = 'Move Later';
+    downBtn.disabled = idx === stagedClips.length - 1;
+    downBtn.onclick = () => {
+      const temp = stagedClips[idx];
+      stagedClips[idx] = stagedClips[idx + 1];
+      stagedClips[idx + 1] = temp;
+      syncStagedClips();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'btn btn-icon';
+    delBtn.style = 'padding:2px 6px; font-size:11px; color:#ef4444;';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Remove Clip';
+    delBtn.onclick = () => {
+      stagedClips.splice(idx, 1);
+      syncStagedClips();
+    };
+
+    right.appendChild(upBtn);
+    right.appendChild(downBtn);
+    right.appendChild(delBtn);
+
+    card.appendChild(left);
+    card.appendChild(right);
+    list.appendChild(card);
+  });
+}
+
+function syncStagedClips() {
+  if (stagedClips.length > 0) {
+    $('shorts-source').value = stagedClips.map(c => c.path).join(', ');
+  }
+  renderMultiClipSequencer();
+}
+
+$('btn-auto-order-clips').onclick = async () => {
+  if (!stagedClips || stagedClips.length < 2) {
+    showError('Stage at least 2 clips to analyze and auto-order.');
+    return;
+  }
+  const btn = $('btn-auto-order-clips');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing Narrative Flow...';
+  showError('Analyzing speech cadence, energy, and viral hooks across all clips...');
+
+  try {
+    const res = await api('/api/shorts/analyze-order', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ clips: stagedClips.map(c => c.path) })
+    });
+    if (res.ok && res.clips && res.clips.length) {
+      stagedClips = res.clips;
+      syncStagedClips();
+      showError('✨ Clips re-ordered into optimal narrative sequence (Hook -> Story -> CTA)!');
+    }
+  } catch (err) {
+    showError('Auto-ordering failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Analyze & Auto-Order Clips';
+  }
+};
+
+$('btn-reverse-clips').onclick = () => {
+  stagedClips.reverse();
+  syncStagedClips();
+  showError('Clips sequence reversed.');
+};
+
+$('btn-clear-clips').onclick = () => {
+  stagedClips = [];
+  $('shorts-source').value = '';
+  renderMultiClipSequencer();
+  showError('All clips cleared.');
+};
+
+$('shorts-source').oninput = () => {
+  const val = $('shorts-source').value.trim();
+  if (val.includes(',') || val.includes('\n')) {
+    const parts = val.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      stagedClips = parts.map((p, i) => ({
+        path: p,
+        name: p.split(/[\\/]/).pop(),
+        duration: null,
+        role: i === 0 ? '🎯 Hook' : (i === parts.length - 1 ? '🏁 CTA / Ending' : `📖 Point #${i}`)
+      }));
+      renderMultiClipSequencer();
+    }
+  } else if (!val) {
+    stagedClips = [];
+    renderMultiClipSequencer();
+  }
+};
+
 async function uploadMultipleOfflineVideos(files) {
   if (!files || !files.length) return;
   if (files.length === 1) {
     await uploadOfflineVideo(files[0]);
     return;
   }
-  const paths = [];
+  const newStaged = [];
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     showError(`Loading clip ${i + 1}/${files.length}: ${f.name}...`);
@@ -3155,7 +3406,7 @@ async function uploadMultipleOfflineVideos(files) {
       const checkRes = await fetch('/api/shorts/check-upload?name=' + encodeURIComponent(f.name) + '&size=' + (f.size || 0));
       const checkData = await checkRes.json();
       if (checkData.exists && checkData.path) {
-        paths.push(checkData.path);
+        newStaged.push({ path: checkData.path, name: f.name, duration: null });
         continue;
       }
       const res = await fetch('/api/shorts/upload?name=' + encodeURIComponent(f.name), {
@@ -3163,13 +3414,16 @@ async function uploadMultipleOfflineVideos(files) {
         body: f,
       });
       const data = await res.json();
-      if (data.path) paths.push(data.path);
+      if (data.path) {
+        newStaged.push({ path: data.path, name: f.name, duration: null });
+      }
     } catch (e) {
       console.warn('Failed upload for', f.name, e);
     }
   }
-  $('shorts-source').value = paths.join(', ');
-  showError(`Staged ${paths.length} clips! Ready to process or combine into 1 short.`);
+  stagedClips = newStaged;
+  syncStagedClips();
+  showError(`Staged ${stagedClips.length} clips! Use the Sequencer above to auto-order or rearrange manually.`);
 }
 
 async function uploadOfflineVideo(file) {
@@ -3934,6 +4188,126 @@ $('vo-generate-btn').onclick = async () => {
     lbl.textContent = 'Synthesize Voiceover';
   }
 };
+
+// Voiceover extraction from media file
+$('vo-browse-btn').onclick = () => $('vo-file-input').click();
+
+$('vo-file-input').onchange = async e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  $('vo-extract-source').value = file.path || file.name;
+  if (!file.path) {
+    showError('Uploading media file for voiceover extraction: ' + file.name + '...');
+    try {
+      const res = await fetch('/api/shorts/upload?name=' + encodeURIComponent(file.name), {
+        method: 'POST',
+        body: file,
+      });
+      const data = await res.json();
+      if (data.path) $('vo-extract-source').value = data.path;
+    } catch (err) {
+      showError('Upload failed: ' + err.message);
+    }
+  }
+};
+
+$('vo-extract-btn').onclick = async () => {
+  const src = $('vo-extract-source').value.trim();
+  if (!src) {
+    showError('Please enter a video/audio path or select a media file.');
+    return;
+  }
+  const btn = $('vo-extract-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Extracting...';
+  showError('Extracting isolated speech audio and transcribing captions with Whisper...');
+
+  try {
+    const res = await api('/api/voiceover/extract', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ source: src })
+    });
+    if (res.ok) {
+      if (res.text) $('vo-text').value = res.text;
+      if (res.audio_file) {
+        $('vo-player-card').style.display = 'block';
+        const audio = $('vo-audio');
+        audio.src = '/media/' + encodeURIComponent(res.audio_file);
+        audio.load();
+        $('vo-file-name').textContent = res.audio_file;
+        $('vo-download-link').href = audio.src;
+        $('vo-download-link').download = res.audio_file;
+      }
+      showError(`✨ Successfully extracted speech audio (${res.duration}s) and captions!`);
+    }
+  } catch (err) {
+    showError('Extraction failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px; margin-right:4px"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Extract Speech & Captions';
+  }
+};
+
+// Caption Text Enhancements
+async function enhanceVoiceoverText(mode) {
+  const text = $('vo-text').value.trim();
+  if (!text) {
+    showError('Please write or extract a voiceover script first.');
+    return;
+  }
+  showError('Enhancing script with ' + mode + ' style...');
+  try {
+    const res = await api('/api/voiceover/enhance-text', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text, mode })
+    });
+    if (res.ok && res.text) {
+      $('vo-text').value = res.text;
+      showError('✨ Script enhanced with ' + mode + ' style!');
+    }
+  } catch (err) {
+    showError('Text enhancement failed: ' + err.message);
+  }
+}
+
+$('vo-enhance-hook').onclick = () => enhanceVoiceoverText('hook');
+$('vo-enhance-hormozi').onclick = () => enhanceVoiceoverText('hormozi');
+$('vo-enhance-grammar').onclick = () => enhanceVoiceoverText('grammar');
+
+// Audio Enhancements
+async function enhanceVoiceoverAudio(preset) {
+  const fileName = $('vo-file-name').textContent.trim();
+  if (!fileName) {
+    showError('Please synthesize or extract a voiceover track first.');
+    return;
+  }
+  showError('Applying broadcast DSP mastering (' + preset + ')...');
+  try {
+    const res = await api('/api/voiceover/enhance-audio', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ file: fileName, preset })
+    });
+    if (res.ok && res.file) {
+      const audio = $('vo-audio');
+      audio.src = '/media/' + encodeURIComponent(res.file);
+      audio.load();
+      audio.play().catch(() => {});
+      $('vo-file-name').textContent = res.file;
+      $('vo-download-link').href = audio.src;
+      $('vo-download-link').download = res.file;
+      showError('✨ Audio enhanced with preset: ' + preset + '! Ready to use in Shorts Studio.');
+    }
+  } catch (err) {
+    showError('Audio enhancement failed: ' + err.message);
+  }
+}
+
+$('vo-audio-studio').onclick = () => enhanceVoiceoverAudio('studio');
+$('vo-audio-warmth').onclick = () => enhanceVoiceoverAudio('warmth');
+$('vo-audio-loudnorm').onclick = () => enhanceVoiceoverAudio('loudnorm');
 
 init().then(fitCanvas);
 </script>
