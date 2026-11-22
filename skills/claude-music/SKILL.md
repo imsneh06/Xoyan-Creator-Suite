@@ -1,4 +1,4 @@
----
+can ---
 name: claude-music
 description: >
   Music production suite using ACE-Step 1.5 via Python API. Routes /music commands

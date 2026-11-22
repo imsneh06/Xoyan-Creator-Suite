@@ -28,6 +28,7 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 VIRALITY_CRITERIA = """Virality signals to prioritize (ranked by impact):
 1. HOOK MOMENTS — statements that create immediate curiosity ("The secret is...", "Nobody talks about...", "I was completely wrong about...")
@@ -1044,12 +1045,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         music_path: Path | None = None,
         model_size: str = "base",
         burn_captions: bool = True,
+        caption_style: str = "hormozi",
         custom_text: str = "",
         sticker_badge: str = "",
         progress_bar: str = "none",
         color_grade: str = "enhanced",
         on_progress: Callable[[str, float], None] | None = None,
         is_cancelled: Callable[[], bool] | None = None,
+        **kwargs: Any,
     ) -> dict:
         """Professional short-form auto-edit following the exact Reel/TikTok spec:
         - Whisper word timestamps
@@ -1088,6 +1091,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             music_path=music_path,
             model_size=model_size,
             burn_captions=burn_captions,
+            caption_style=caption_style,
             custom_text=custom_text,
             sticker_badge=sticker_badge,
             progress_bar=progress_bar,

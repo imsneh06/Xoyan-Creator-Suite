@@ -253,6 +253,8 @@ def write_ass_captions(
     burn_captions: bool = True,
     custom_text: str = "",
     sticker_badge: str = "",
+    caption_style: str = "hormozi",
+    **kwargs: Any,
 ) -> bool:
     """Burned-in high-impact viral captions, custom headline text, and corner sticker badge."""
     total_dur = sum(float(c["end"] - c["start"]) for c in clips) if clips else 30.0
@@ -273,14 +275,18 @@ def write_ass_captions(
                 st = offset + max(0.0, g[0]["s"] - c["start"])
                 en = offset + (g[-1]["e"] - c["start"]) + 0.08
 
-                # Highlight emphasized words (>= 6 characters or key punchy terms)
+                # Format words based on caption style (hormozi vs clean)
                 formatted_words = []
                 for item in g:
-                    clean_w = item["w"].upper()
-                    if len(clean_w) >= 6 or clean_w in {"NOW", "BEST", "SECRET", "MONEY", "NEVER", "STOP", "CHECK"}:
-                        formatted_words.append(r"{\c&H00D7FF&\fscx110\fscy110}" + clean_w + r"{\r}")
+                    raw_w = item["w"]
+                    if caption_style == "hormozi":
+                        clean_w = raw_w.upper()
+                        if len(clean_w) >= 6 or clean_w in {"NOW", "BEST", "SECRET", "MONEY", "NEVER", "STOP", "CHECK"}:
+                            formatted_words.append(r"{\c&H00D7FF&\fscx110\fscy110}" + clean_w + r"{\r}")
+                        else:
+                            formatted_words.append(r"{\c&HFFFFFF&}" + clean_w)
                     else:
-                        formatted_words.append(r"{\c&HFFFFFF&}" + clean_w)
+                        formatted_words.append(r"{\c&HFFFFFF&}" + raw_w)
 
                 txt = " ".join(formatted_words)
                 lines.append(f"Dialogue: 0,{ass_time(st)},{ass_time(en)},Cap,,0,0,0,,{txt}")
@@ -391,11 +397,13 @@ def autoedit_video(
     music_path: Path | None = None,
     model_size: str = "base",
     burn_captions: bool = True,
+    caption_style: str = "hormozi",
     custom_text: str = "",
     sticker_badge: str = "",
     progress_bar: str = "none",
     color_grade: str = "enhanced",
     on_progress: Callable[[str, float], None] | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """Execute complete professional auto-edit pipeline and return result dict with EDL."""
     src = src_path.resolve()
@@ -441,6 +449,7 @@ def autoedit_video(
     has_subtitles = write_ass_captions(
         clips, captions_file,
         burn_captions=burn_captions,
+        caption_style=caption_style,
         custom_text=custom_text,
         sticker_badge=sticker_badge,
     )

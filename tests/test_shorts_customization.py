@@ -166,3 +166,32 @@ def test_shorts_engine_keyword_synced_metadata(tmp_path):
     assert "real estate" in meta["description"].lower()
     assert "timestamps" in meta and len(meta["timestamps"]) >= 2
     assert meta["video_banner"]
+
+
+def test_autoedit_reel_caption_style_support(tmp_path, monkeypatch):
+    from unittest.mock import MagicMock
+    engine = ShortsEngine(tmp_path)
+
+    # Mock autoedit_video so we don't invoke full ffmpeg/whisper in contract test
+    mock_autoedit = MagicMock(return_value={
+        "duration": 30.0,
+        "clips_count": 5,
+        "output_file": "dummy.mp4",
+        "edl": [{"text": "Hello world"}],
+    })
+    monkeypatch.setattr("reel_autoedit.autoedit_video", mock_autoedit)
+
+    dummy_source = tmp_path / "test.mp4"
+    dummy_source.write_bytes(b"dummy")
+
+    res = engine.autoedit_reel(
+        source_path=dummy_source,
+        target_duration=30.0,
+        caption_style="clean",
+        custom_text="TEST BANNER",
+    )
+    assert res["id"].startswith("pro_")
+    assert mock_autoedit.called
+    kwargs = mock_autoedit.call_args[1]
+    assert kwargs.get("caption_style") == "clean"
+
